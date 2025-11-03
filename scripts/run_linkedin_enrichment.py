@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import sys
+import importlib.util
 from pathlib import Path
 from typing import List
 
@@ -82,6 +83,7 @@ def main() -> None:
     load_env_file(env_path)
 
     sys.path.insert(0, str(services_root))
+    sys.path.insert(0, str(service_dir))
 
     credentials_path = Path(args.credentials)
     if not credentials_path.is_absolute():
@@ -93,10 +95,29 @@ def main() -> None:
 
     logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO))
 
+    package_name = "enrichment_linkedin_lambda"
+    package_spec = importlib.util.spec_from_file_location(
+        package_name,
+        service_dir / "__init__.py",
+        submodule_search_locations=[str(service_dir)],
+    )
+    if package_spec is None or package_spec.loader is None:
+        raise ImportError("Unable to create module spec for enrichment package")
+    package_module = importlib.util.module_from_spec(package_spec)
+    package_spec.loader.exec_module(package_module)  # type: ignore[attr-defined]
+    sys.modules[package_name] = package_module
+
     try:
-        from enrichment_linkedin_lambda.handler import handler  # type: ignore
-    except ImportError as exc:  # pragma: no cover - import resolution issues
-        logging.error("Failed to import LinkedIn enrichment handler from %s: %s", service_dir, exc)
+        handler_spec = importlib.util.spec_from_file_location(
+            f"{package_name}.handler", service_dir / "handler.py"
+        )
+        if handler_spec is None or handler_spec.loader is None:
+            raise ImportError("Unable to create module spec for handler")
+        module = importlib.util.module_from_spec(handler_spec)
+        handler_spec.loader.exec_module(module)  # type: ignore[attr-defined]
+        handler = module.handler  # type: ignore[attr-defined]
+    except Exception as exc:  # pragma: no cover - import resolution issues
+        logging.error("Failed to import LinkedIn enrichment handler from %s: %s", service_dir, exc, exc_info=True)
         raise
 
     payload = build_payload(args.run_id, args.prospects)

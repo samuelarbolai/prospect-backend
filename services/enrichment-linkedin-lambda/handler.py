@@ -11,7 +11,7 @@ import json
 import logging
 from typing import Any, Dict
 
-from processor import process_message
+from .processor import process_message
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
