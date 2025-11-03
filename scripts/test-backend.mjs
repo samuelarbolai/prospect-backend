@@ -162,9 +162,9 @@ async function runTest(test) {
       if (result.error) {
         console.log(`    Error: ${result.error}`);
       }
-      if (result.snippet) {
-        console.log(`    Body: ${result.snippet}`);
-      }
+    }
+    if (result.snippet && result.snippet.trim().length > 0) {
+      console.log(`    Body: ${result.snippet}`);
     }
   });
 
