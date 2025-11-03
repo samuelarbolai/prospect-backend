@@ -1,0 +1,41 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install workspace dependencies
+        run: npm install
+        working-directory: backend
+
+      - name: Build shared Firestore helpers
+        run: npm run build
+        working-directory: backend/packages/shared-firestore
+
+      - name: Build prospect API
+        run: npm run build
+        working-directory: backend/services/prospect-api
+
+      - name: Build lists API
+        run: npm run build
+        working-directory: backend/services/prospect-lists-api
+
+      - name: Backend smoke tests (deployed endpoints)
+        run: node scripts/test-backend.mjs
+        working-directory: backend
+        env:
+          PROSPECT_API_BASE: https://prospect-api-633098049477.us-central1.run.app
+          LISTS_API_BASE: https://prospect-lists-api-633098049477.us-central1.run.app

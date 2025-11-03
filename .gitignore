@@ -1,0 +1,8 @@
+node_modules/
+services/*/node_modules/
+services/prospect-api/leadgen-475923-*.json
+.env
+.DS_Store
+npm-debug.log*
+coverage/
+dist/
