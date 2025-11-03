@@ -20,10 +20,12 @@ aws lambda update-function-code \
 
 ## Environment Variables
 
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON` or `GOOGLE_APPLICATION_CREDENTIALS_B64`
-- `ANTHROPIC_API_KEY`
-- `PROSPECT_FIRESTORE_PROJECT`
-- `RESULT_QUEUE_URL` (optional completion queue)
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_B64`, or rely on the Lambda execution role.
+- `ANTHROPIC_API_KEY` (or `CLAUDE_API_KEY_WORKSPACE`).
+- Optional: `ANTHROPIC_MODEL` / `ANTHROPIC_TEMPERATURE` to override defaults.
+- Optional: `ENRICHMENT_DRY_RUN=1` to return mock domains/verticals during local testing.
+- `PROSPECT_FIRESTORE_PROJECT` if you need to pin a project when using workload identity.
+- Any downstream queue configuration (`RESULT_QUEUE_URL`, etc.).
 
 ## Local Invocation
 
@@ -35,3 +37,19 @@ aws lambda invoke \
 ```
 
 Capture logs in CloudWatch or via `aws logs tail /aws/lambda/domain-enrichment`.
+
+Dry-run mode lets you test without calling Anthropic:
+
+```bash
+export ENRICHMENT_DRY_RUN=1
+python3 - <<'PY'
+from handler import handler
+
+payload = {
+    "Records": [
+        {"body": "{\"runId\":\"dry\",\"prospectIds\":[\"demo-prospect\"]}"}
+    ]
+}
+handler(payload, None)
+PY
+```

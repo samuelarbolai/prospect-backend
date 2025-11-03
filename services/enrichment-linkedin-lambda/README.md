@@ -22,11 +22,13 @@ aws lambda update-function-code \
 
 Set the following variables in Lambda:
 
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON` or `GOOGLE_APPLICATION_CREDENTIALS_B64`
-- `OPENAI_API_KEY`
-- `GOOGLE_API_KEY`, `GOOGLE_CSE_ID`
-- `DOMAIN_JOBS_QUEUE_URL`
-- `PROSPECT_FIRESTORE_PROJECT`
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS_B64`, or rely on the execution role.
+- Either `GOOGLE_API_KEY` **or** `GOOGLE_SERVICE_ACCOUNT_FILE` (`GOOGLE_SERVICE_ACCOUNT_SCOPES`) so Google search can authenticate.
+- `GOOGLE_CSE_ID` – Programmable Search Engine ID used for queries.
+- `OPENAI_API_KEY` (optionally override `OPENAI_MODEL`).
+- Optional: `ENRICHMENT_DRY_RUN=1` to skip external APIs during local tests.
+- Any queue chaining settings (e.g. `DOMAIN_JOBS_QUEUE_URL`) your workflow relies on.
+- Set `PROSPECT_FIRESTORE_PROJECT` if you need to pin the Firestore project when using workload identity.
 
 Secrets can also come from AWS Secrets Manager; fetch them inside the handler before processing messages.
 
@@ -42,3 +44,21 @@ aws lambda invoke \
 ```
 
 Monitor CloudWatch logs for progress and failures.
+
+For offline/local testing use the dry-run mode:
+
+```bash
+export ENRICHMENT_DRY_RUN=1
+python3 - <<'PY'
+from handler import handler
+
+payload = {
+    "Records": [
+        {"body": "{\"runId\":\"dry-run\",\"prospectIds\":[\"demo-prospect\"]}"}
+    ]
+}
+handler(payload, None)
+PY
+```
+
+This bypasses Google/OpenAI calls and writes mock LinkedIn URLs into Firestore (or the emulator).

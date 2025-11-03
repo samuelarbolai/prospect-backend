@@ -5,6 +5,7 @@ import { ENRICHMENT_STATUS, prospectCollection } from "@prospect/shared-firestor
 import { db, FieldValue, Timestamp } from "../config.js";
 import { sqsClient } from "../aws/sqsClient.js";
 import { chunk } from "../utils.js";
+import type { DocumentSnapshot, DocumentData } from "firebase-admin/firestore";
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
   const runRef = db.collection("enrichment_runs").doc();
 
   const prospectsRef = prospectCollection(db);
-  const prospectSnapshots = await Promise.all(
+  const prospectSnapshots: DocumentSnapshot<DocumentData>[] = await Promise.all(
     prospectIds.map((id) => prospectsRef.doc(id).get()),
   );
 

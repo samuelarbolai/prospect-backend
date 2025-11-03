@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { ENRICHMENT_STATUS, EnrichmentStatus, prospectCollection } from "@prospect/shared-firestore";
 import { FieldPath, db } from "../config.js";
+import type { QueryDocumentSnapshot, DocumentData } from "firebase-admin/firestore";
 
 const router = Router();
 
@@ -201,8 +202,8 @@ router.get("/list-options", async (_req, res) => {
   const prospectsRef = prospectCollection(db);
   const snapshot = await prospectsRef.limit(500).get();
   const listSet = new Set<string>();
-  snapshot.forEach((doc) => {
-    const listIds = doc.get("list_ids");
+  snapshot.forEach((docSnapshot: QueryDocumentSnapshot<DocumentData>) => {
+    const listIds = docSnapshot.get("list_ids");
     if (Array.isArray(listIds)) {
       listIds.forEach((value) => {
         if (typeof value === "string" && value.trim()) {
