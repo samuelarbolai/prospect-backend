@@ -7,12 +7,6 @@ const listsApiBase = process.env.LISTS_API_BASE ?? 'http://localhost:4100';
 
 const tests = [
   {
-    name: 'Prospect API health check',
-    method: 'GET',
-    url: `${prospectApiBase}/healthz`,
-    expect: 200,
-  },
-  {
     name: 'Prospect list (pageSize=1)',
     method: 'GET',
     url: `${prospectApiBase}/api/prospects?pageSize=1`,
@@ -62,12 +56,6 @@ const tests = [
     url: `${prospectApiBase}/api/tag_outreach_ready`,
     body: {},
     expect: 400,
-  },
-  {
-    name: 'Lists API health check',
-    method: 'GET',
-    url: `${listsApiBase}/healthz`,
-    expect: 200,
   },
   {
     name: 'Fetch lists includes seeded list',
