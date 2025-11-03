@@ -108,6 +108,14 @@ GOOGLE_APPLICATION_CREDENTIALS=../leadgen-475923-29d2eed038e0.json \
 
 This creates `mock_enrichment_list` with 15 sample prospects tagged as `pending`.
 
+Copy the environment template once so the helper scripts pick up your keys automatically:
+
+```bash
+cd backend
+cp .env.example .env
+# edit .env with your API keys / service account paths
+```
+
 ### Local Lambda Invocations
 
 Dry-run the enrichment lambdas (skips external APIs) against the mock list:

@@ -16,6 +16,20 @@ def resolve_repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
 
+def load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'").strip('"')
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def build_payload(run_id: str, prospect_ids: List[str]) -> dict:
     body = json.dumps({"runId": run_id, "prospectIds": prospect_ids})
     return {"Records": [{"body": body}]}
@@ -33,6 +47,11 @@ def main() -> None:
         "--run-id",
         default="local-linkedin-test",
         help="Run identifier stored in enrichment_runs (default: local-linkedin-test).",
+    )
+    parser.add_argument(
+        "--env-file",
+        default=".env",
+        help="Optional .env file to load before running (default: backend/.env).",
     )
     parser.add_argument(
         "--credentials",
@@ -57,17 +76,20 @@ def main() -> None:
     services_root = repo_root / "services"
     service_dir = services_root / "enrichment-linkedin-lambda"
 
+    env_path = Path(args.env_file)
+    if not env_path.is_absolute():
+        env_path = (repo_root / args.env_file).resolve()
+    load_env_file(env_path)
+
     sys.path.insert(0, str(services_root))
 
     credentials_path = Path(args.credentials)
     if not credentials_path.is_absolute():
         credentials_path = (repo_root / args.credentials).resolve()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(credentials_path)
+    os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", str(credentials_path))
 
     if args.dry_run:
         os.environ["ENRICHMENT_DRY_RUN"] = "1"
-    else:
-        os.environ.pop("ENRICHMENT_DRY_RUN", None)
 
     logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO))
 
@@ -85,4 +107,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
