@@ -97,3 +97,36 @@ GOOGLE_APPLICATION_CREDENTIALS=services/prospect-api/leadgen-475923-29d2eed038e0
 ```
 
 This upserts the `test_automation_list` lists document and three prospects (`aaa_test_prospect`, `test_prospect_1`, `test_prospect_2`) so the automated test runner can assert response payloads.
+
+For end-to-end enrichment testing you can also seed a dedicated mock list:
+
+```bash
+cd backend
+GOOGLE_APPLICATION_CREDENTIALS=../leadgen-475923-29d2eed038e0.json \
+  python3 scripts/seed-mock-enrichment.py
+```
+
+This creates `mock_enrichment_list` with 15 sample prospects tagged as `pending`.
+
+### Local Lambda Invocations
+
+Dry-run the enrichment lambdas (skips external APIs) against the mock list:
+
+```bash
+cd backend
+python3 scripts/run_linkedin_enrichment.py --dry-run
+python3 scripts/run_domain_enrichment.py --dry-run
+```
+
+For full runs provide the necessary API keys, e.g.:
+
+```bash
+cd backend
+OPENAI_API_KEY=<KEY> GOOGLE_API_KEY=<KEY> GOOGLE_CSE_ID=12413e62e1382465a \
+  python3 scripts/run_linkedin_enrichment.py
+
+ANTHROPIC_API_KEY=<KEY> \
+  python3 scripts/run_domain_enrichment.py
+```
+
+Both scripts default to the repository service-account JSON and to the seeded `mock_enrichment_list` prospect IDs; override `--prospects`, `--run-id`, or `--credentials` as needed.
