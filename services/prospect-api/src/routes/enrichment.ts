@@ -5,6 +5,8 @@ import { ENRICHMENT_STATUS, prospectCollection } from "@prospect/shared-firestor
 import { db, FieldValue, Timestamp } from "../config.js";
 import { sqsClient } from "../aws/sqsClient.js";
 import { chunk } from "../utils.js";
+import path from "path";
+import { spawn } from "child_process";
 import type { DocumentSnapshot, DocumentData } from "firebase-admin/firestore";
 
 const router = Router();
@@ -84,6 +86,9 @@ router.post("/enqueue_enrichment", async (req, res) => {
   const queueUrl = process.env.ENRICHMENT_JOBS_QUEUE_URL;
   if (!queueUrl) {
     console.warn("ENRICHMENT_JOBS_QUEUE_URL is not set; skipping queue publish.");
+    triggerLocalEnrichment(runRef.id).catch((error) => {
+      console.error("Local enrichment trigger failed:", error);
+    });
   } else {
     const payload = {
       runId: runRef.id,
@@ -98,6 +103,11 @@ router.post("/enqueue_enrichment", async (req, res) => {
         MessageBody: JSON.stringify(payload),
       }),
     );
+    if (process.env.LOCAL_ENRICHMENT === "1") {
+      triggerLocalEnrichment(runRef.id).catch((error) => {
+        console.error("Local enrichment trigger failed:", error);
+      });
+    }
   }
 
   return res.json({
@@ -152,3 +162,48 @@ router.post("/tag_outreach_ready", async (req, res) => {
 });
 
 export default router;
+
+function resolveScriptPath(envVar: string, fallback: string): string {
+  const override = process.env[envVar];
+  if (override && override.trim().length > 0) {
+    return path.isAbsolute(override) ? override : path.resolve(process.cwd(), override);
+  }
+  return fallback;
+}
+
+function spawnScript(scriptPath: string, runId: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const repoRoot = path.resolve(process.cwd(), "..", "..");
+    const child = spawn("python3", [scriptPath, "--run-id", runId], {
+      cwd: repoRoot,
+      stdio: "inherit",
+    });
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`${scriptPath} exited with code ${code}`));
+      }
+    });
+  });
+}
+
+async function triggerLocalEnrichment(runId: string): Promise<void> {
+  if (process.env.LOCAL_ENRICHMENT === "0") {
+    return;
+  }
+  const repoRoot = path.resolve(process.cwd(), "..", "..");
+  const defaultLinked = path.resolve(repoRoot, "scripts", "run_linkedin_enrichment.py");
+  const defaultDomain = path.resolve(repoRoot, "scripts", "run_domain_enrichment.py");
+
+  const linkedScript = resolveScriptPath("LOCAL_LINKEDIN_SCRIPT", defaultLinked);
+  const domainScript = resolveScriptPath("LOCAL_DOMAIN_SCRIPT", defaultDomain);
+
+  try {
+    await spawnScript(linkedScript, runId);
+    await spawnScript(domainScript, runId);
+  } catch (error) {
+    throw error;
+  }
+}

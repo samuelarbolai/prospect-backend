@@ -133,3 +133,5 @@ ANTHROPIC_API_KEY=<KEY> \
   python3 scripts/run_domain_enrichment.py
 ```
 Both scripts default to the repository service-account JSON (see the `.env.example` files) and automatically pick the latest queued run based on the `stage` field (`linkedin` then `domain`). Override `--run-id`, `--env-file`, or `--credentials` as needed.
+
+When running the TypeScript API locally, set `LOCAL_ENRICHMENT=1` in `services/prospect-api/.env` so every `/api/enqueue_enrichment` call will automatically chain to the local Python scripts (no manual command needed).
