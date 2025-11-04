@@ -11,7 +11,10 @@ import json
 import logging
 from typing import Any, Dict
 
-from .processor import process_message
+try:
+    from .processor import process_message
+except ImportError:  # pragma: no cover - fallback when package not namespaced
+    from processor import process_message  # type: ignore[import]
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

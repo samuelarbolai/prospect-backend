@@ -17,7 +17,10 @@ from linkedin_enrichment import (
     load_prompt,
 )
 
-from .utils import build_keywords_from_prospect, current_timestamp, get_firestore_client
+try:
+    from .utils import build_keywords_from_prospect, current_timestamp, get_firestore_client
+except ImportError:  # pragma: no cover - fallback for zipped lambda package
+    from utils import build_keywords_from_prospect, current_timestamp, get_firestore_client  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 

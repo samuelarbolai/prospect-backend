@@ -13,7 +13,10 @@ from google.cloud import firestore
 
 from corporate_domain_enrichment import DEFAULT_ANTHROPIC_MODEL, build_prompt, extract_tsv, send_prompt
 
-from .utils import current_timestamp, get_firestore_client
+try:
+    from .utils import current_timestamp, get_firestore_client
+except ImportError:  # pragma: no cover - fallback for zipped lambda package
+    from utils import current_timestamp, get_firestore_client  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 
