@@ -110,7 +110,7 @@ def process_message(payload: Dict[str, Any]) -> None:
     results: Dict[str, Dict[str, str]] = {}
 
     if dry_run:
-        logger.info("Corporate domain enrichment running in dry-run mode")
+        logger.info("Corporate domain enrichment running in dry-run mode (runId=%s)", run_id)
         for org in organizations:
             results[org] = {
                 "Organization": org,
@@ -190,8 +190,9 @@ def process_message(payload: Dict[str, Any]) -> None:
         run_ref.set(run_update, merge=True)
 
     logger.info(
-        "Corporate domain enrichment finished. success=%d total=%d dry_run=%s",
+        "Corporate domain enrichment finished. success=%d total=%d dry_run=%s runId=%s",
         success_count,
         len(docs),
         dry_run,
+        run_id,
     )

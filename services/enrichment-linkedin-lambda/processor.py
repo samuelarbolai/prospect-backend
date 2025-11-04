@@ -165,7 +165,7 @@ def process_message(payload: Dict[str, Any]) -> None:
     failure_notes: List[Dict[str, Any]] = []
 
     if dry_run:
-        logger.info("Running LinkedIn enrichment in dry-run mode.")
+        logger.info("Running LinkedIn enrichment in dry-run mode. runId=%s", run_id)
         _dry_run_fill(rows)
     else:
         google_api_key, google_headers = build_google_auth(
@@ -248,8 +248,9 @@ def process_message(payload: Dict[str, Any]) -> None:
         run_ref.set(run_update, merge=True)
 
     logger.info(
-        "LinkedIn enrichment finished. success=%d total=%d dry_run=%s",
+        "LinkedIn enrichment finished. success=%d total=%d dry_run=%s runId=%s",
         success_count,
         len(rows),
         dry_run,
+        run_id,
     )

@@ -71,6 +71,8 @@ def fetch_prospect_ids(client: firestore.Client, run_id: str) -> List[str]:
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="[domain-runner] %(message)s")
+    logger = logging.getLogger("domain.runner")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--run-id",
@@ -166,14 +168,15 @@ def main() -> None:
         raise
 
     client = firestore.Client()
+    logger.info("starting with run-id=%s (explicit=%s)", args.run_id, args.run_id is not None)
     run_id = select_run_id(client, args.run_id)
     if not run_id:
-        logging.error("No run selected; exiting")
+        logger.error("No run selected; exiting")
         return
 
     prospect_ids = fetch_prospect_ids(client, run_id)
     if not prospect_ids:
-        logging.error("No prospects associated with run %s", run_id)
+        logger.error("No prospects associated with run %s", run_id)
         return
 
     logging.info("Processing run %s with %d prospects", run_id, len(prospect_ids))

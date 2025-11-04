@@ -96,7 +96,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
 
   const queueUrl = process.env.ENRICHMENT_JOBS_QUEUE_URL;
   if (!queueUrl) {
-    console.warn("ENRICHMENT_JOBS_QUEUE_URL is not set; skipping queue publish.");
+    console.warn("[enqueue] ENRICHMENT_JOBS_QUEUE_URL not set; invoking local handler only.");
     triggerLocal(jobType, runRef.id).catch((error) => {
       console.error("Local enrichment trigger failed:", error);
     });
@@ -115,6 +115,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
       }),
     );
     if (process.env.LOCAL_ENRICHMENT === "1") {
+      console.info(`[enqueue] also triggering local ${jobType} script for run ${runRef.id}`);
       triggerLocal(jobType, runRef.id).catch((error) => {
         console.error("Local enrichment trigger failed:", error);
       });
@@ -186,6 +187,7 @@ function resolveScriptPath(envVar: string, fallback: string, repoRoot: string): 
 function spawnScript(repoRoot: string, scriptPath: string, runId: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const absolute = path.isAbsolute(scriptPath) ? scriptPath : path.resolve(repoRoot, scriptPath);
+    console.info(`[local] launching ${absolute} --run-id ${runId}`);
     const child = spawn("python3", [absolute, "--run-id", runId], {
       cwd: repoRoot,
       stdio: "inherit",
@@ -193,6 +195,7 @@ function spawnScript(repoRoot: string, scriptPath: string, runId: string): Promi
     child.on("error", reject);
     child.on("exit", (code) => {
       if (code === 0) {
+        console.info(`[local] ${absolute} completed for run ${runId}`);
         resolve();
       } else {
         reject(new Error(`${absolute} exited with code ${code}`));
@@ -203,16 +206,19 @@ function spawnScript(repoRoot: string, scriptPath: string, runId: string): Promi
 
 async function triggerLocal(jobType: "linkedin" | "domain", runId: string): Promise<void> {
   if (process.env.LOCAL_ENRICHMENT === "0") {
+    console.info(`[local] skipping ${jobType} trigger for run ${runId} (LOCAL_ENRICHMENT=0)`);
     return;
   }
   const repoRoot = path.resolve(process.cwd(), "..", "..");
   if (jobType === "domain") {
     const defaultDomain = path.resolve(repoRoot, "scripts", "run_domain_enrichment.py");
     const script = resolveScriptPath("LOCAL_DOMAIN_SCRIPT", defaultDomain, repoRoot);
+    console.info(`[local] trigger domain stage for run ${runId}`);
     await spawnScript(repoRoot, script, runId);
   } else {
     const defaultLinked = path.resolve(repoRoot, "scripts", "run_linkedin_enrichment.py");
     const script = resolveScriptPath("LOCAL_LINKEDIN_SCRIPT", defaultLinked, repoRoot);
+    console.info(`[local] trigger LinkedIn stage for run ${runId}`);
     await spawnScript(repoRoot, script, runId);
   }
 }
