@@ -175,6 +175,8 @@ def process_message(payload: Dict[str, Any]) -> None:
             "completed_at": timestamp,
             "success_count": success_count,
             "failure_count": len(docs) - success_count,
+            "stage": "complete",
+            "domain_completed": True,
         }
         if failures:
             run_update["failures"] = failures

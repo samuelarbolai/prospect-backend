@@ -56,6 +56,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
     prospect_count: prospectIds.length,
     list_tag: effectiveListId,
     metadata: metadata ?? null,
+    stage: "linkedin",
   });
 
   const updates = {

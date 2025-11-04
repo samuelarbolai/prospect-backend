@@ -108,22 +108,18 @@ GOOGLE_APPLICATION_CREDENTIALS=../leadgen-475923-29d2eed038e0.json \
 
 This creates `mock_enrichment_list` with 15 sample prospects tagged as `pending`.
 
-Copy the environment template once so the helper scripts pick up your keys automatically:
-
-```bash
-cd backend
-cp .env.example .env
-# edit .env with your API keys / service account paths
-```
-
 ### Local Lambda Invocations
 
 Dry-run the enrichment lambdas (skips external APIs) against the mock list:
 
 ```bash
 cd backend
-python3 scripts/run_linkedin_enrichment.py --dry-run
-python3 scripts/run_domain_enrichment.py --dry-run
+cp services/enrichment-linkedin-lambda/.env.example services/enrichment-linkedin-lambda/.env
+cp services/enrichment-domain-lambda/.env.example services/enrichment-domain-lambda/.env
+# edit each .env with real keys when ready
+
+python3 scripts/run_linkedin_enrichment.py --dry-run   # processes latest run stage=linkedin
+python3 scripts/run_domain_enrichment.py --dry-run     # processes latest run stage=domain
 ```
 
 For full runs provide the necessary API keys, e.g.:
@@ -136,5 +132,4 @@ OPENAI_API_KEY=<KEY> GOOGLE_API_KEY=<KEY> GOOGLE_CSE_ID=12413e62e1382465a \
 ANTHROPIC_API_KEY=<KEY> \
   python3 scripts/run_domain_enrichment.py
 ```
-
-Both scripts default to the repository service-account JSON and to the seeded `mock_enrichment_list` prospect IDs; override `--prospects`, `--run-id`, or `--credentials` as needed.
+Both scripts default to the repository service-account JSON (see the `.env.example` files) and automatically pick the latest queued run based on the `stage` field (`linkedin` then `domain`). Override `--run-id`, `--env-file`, or `--credentials` as needed.
