@@ -28,6 +28,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          missing=0
+          check_var() {
+            if [ -z "$1" ]; then
+              echo "::error::Missing GitHub secret: $2"
+              missing=1
+            fi
+          }
+          check_var "${AWS_REGION}" "AWS_REGION"
+          check_var "${LINKEDIN_LAMBDA_NAME}" "LINKEDIN_LAMBDA_NAME"
+          check_var "${DOMAIN_LAMBDA_NAME}" "DOMAIN_LAMBDA_NAME"
+          check_var "${{ secrets.AWS_ACCESS_KEY_ID }}" "AWS_ACCESS_KEY_ID"
+          check_var "${{ secrets.AWS_SECRET_ACCESS_KEY }}" "AWS_SECRET_ACCESS_KEY"
+          if [ "$missing" -eq 1 ]; then
+            echo "::error::Configure the missing secrets in Settings > Secrets and variables > Actions before rerunning."
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

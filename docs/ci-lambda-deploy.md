@@ -62,5 +62,8 @@ The workflow runs automatically on pushes to `main` that touch either lambda’s
 source or the workflow file, and you can trigger it manually from the GitHub UI
 (`Actions → Deploy Enrichment Lambdas → Run workflow`).
 
+If any of the required secrets are missing the workflow fails immediately with
+an actionable error so you know which values to add before re-running.
+
 If you need to deploy from a feature branch, run the workflow manually or
 temporarily adjust the trigger branch list.
