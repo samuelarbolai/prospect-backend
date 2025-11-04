@@ -20,8 +20,6 @@ env:
   DOMAIN_LAMBDA_NAME: ${{ secrets.DOMAIN_LAMBDA_NAME }}
   LINKEDIN_CREDENTIAL_JSON: ${{ secrets.LINKEDIN_CREDENTIAL_JSON }}
   DOMAIN_CREDENTIAL_JSON: ${{ secrets.DOMAIN_CREDENTIAL_JSON }}
-    LINKEDIN_CREDENTIAL_JSON: ${{ secrets.LINKEDIN_CREDENTIAL_JSON }}
-    DOMAIN_CREDENTIAL_JSON: ${{ secrets.DOMAIN_CREDENTIAL_JSON }}
 
 jobs:
   deploy:
@@ -87,8 +85,6 @@ jobs:
 
       - name: Update LinkedIn lambda env
         if: env.LINKEDIN_LAMBDA_NAME != ''
-        env:
-          CURRENT_ENV: "${{ steps.linkedin_env.outputs.current }}"
         run: |
           current=$(aws lambda get-function-configuration \
             --function-name "$LINKEDIN_LAMBDA_NAME" \
@@ -97,7 +93,7 @@ jobs:
             --output json)
           python3 <<'PY'
 import json, os, tempfile, subprocess
-current = json.loads(os.environ['CURRENT_ENV']) if os.environ.get('CURRENT_ENV') else json.loads(os.environ['CURRENT'])
+current = json.loads(os.environ['CURRENT'])
 current['GOOGLE_APPLICATION_CREDENTIALS_JSON'] = os.environ['LINKEDIN_CREDENTIAL_JSON']
 tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.json')
 with open(tmp.name, 'w') as fh:
