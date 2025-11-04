@@ -18,6 +18,10 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   LINKEDIN_LAMBDA_NAME: ${{ secrets.LINKEDIN_LAMBDA_NAME }}
   DOMAIN_LAMBDA_NAME: ${{ secrets.DOMAIN_LAMBDA_NAME }}
+  LINKEDIN_CREDENTIAL_JSON: ${{ secrets.LINKEDIN_CREDENTIAL_JSON }}
+  DOMAIN_CREDENTIAL_JSON: ${{ secrets.DOMAIN_CREDENTIAL_JSON }}
+    LINKEDIN_CREDENTIAL_JSON: ${{ secrets.LINKEDIN_CREDENTIAL_JSON }}
+    DOMAIN_CREDENTIAL_JSON: ${{ secrets.DOMAIN_CREDENTIAL_JSON }}
 
 jobs:
   deploy:
@@ -43,6 +47,8 @@ jobs:
           check_var "${DOMAIN_LAMBDA_NAME}" "DOMAIN_LAMBDA_NAME"
           check_var "${{ secrets.AWS_ACCESS_KEY_ID }}" "AWS_ACCESS_KEY_ID"
           check_var "${{ secrets.AWS_SECRET_ACCESS_KEY }}" "AWS_SECRET_ACCESS_KEY"
+          check_var "${LINKEDIN_CREDENTIAL_JSON}" "LINKEDIN_CREDENTIAL_JSON"
+          check_var "${DOMAIN_CREDENTIAL_JSON}" "DOMAIN_CREDENTIAL_JSON"
           if [ "$missing" -eq 1 ]; then
             echo "::error::Configure the missing secrets in Settings > Secrets and variables > Actions before rerunning."
             exit 1
@@ -79,6 +85,33 @@ jobs:
             --zip-file fileb://linkedin_enrichment.zip \
             --publish
 
+      - name: Update LinkedIn lambda env
+        if: env.LINKEDIN_LAMBDA_NAME != ''
+        env:
+          CURRENT_ENV: "${{ steps.linkedin_env.outputs.current }}"
+        run: |
+          current=$(aws lambda get-function-configuration \
+            --function-name "$LINKEDIN_LAMBDA_NAME" \
+            --region "$AWS_REGION" \
+            --query 'Environment.Variables' \
+            --output json)
+          python3 <<'PY'
+import json, os, tempfile, subprocess
+current = json.loads(os.environ['CURRENT_ENV']) if os.environ.get('CURRENT_ENV') else json.loads(os.environ['CURRENT'])
+current['GOOGLE_APPLICATION_CREDENTIALS_JSON'] = os.environ['LINKEDIN_CREDENTIAL_JSON']
+tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.json')
+with open(tmp.name, 'w') as fh:
+    json.dump({'Variables': current}, fh)
+subprocess.run([
+    'aws', 'lambda', 'update-function-configuration',
+    '--function-name', os.environ['LINKEDIN_LAMBDA_NAME'],
+    '--region', os.environ['AWS_REGION'],
+    '--environment', f'file://{tmp.name}'
+], check=True)
+PY
+        env:
+          CURRENT: $current
+
       - name: Build domain lambda package
         working-directory: services/enrichment-domain-lambda
         run: |
@@ -96,6 +129,31 @@ jobs:
             --function-name "$DOMAIN_LAMBDA_NAME" \
             --zip-file fileb://domain_enrichment.zip \
             --publish
+
+      - name: Update domain lambda env
+        if: env.DOMAIN_LAMBDA_NAME != ''
+        run: |
+          current=$(aws lambda get-function-configuration \
+            --function-name "$DOMAIN_LAMBDA_NAME" \
+            --region "$AWS_REGION" \
+            --query 'Environment.Variables' \
+            --output json)
+          python3 <<'PY'
+import json, os, tempfile, subprocess
+current = json.loads(os.environ['CURRENT'])
+current['GOOGLE_APPLICATION_CREDENTIALS_JSON'] = os.environ['DOMAIN_CREDENTIAL_JSON']
+tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.json')
+with open(tmp.name, 'w') as fh:
+    json.dump({'Variables': current}, fh)
+subprocess.run([
+    'aws', 'lambda', 'update-function-configuration',
+    '--function-name', os.environ['DOMAIN_LAMBDA_NAME'],
+    '--region', os.environ['AWS_REGION'],
+    '--environment', f'file://{tmp.name}'
+], check=True)
+PY
+        env:
+          CURRENT: $current
 
       - name: Clean up build artifacts
         if: always()
