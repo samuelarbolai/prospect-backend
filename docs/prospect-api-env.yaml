@@ -1,0 +1,3 @@
+CORS_ALLOWED_ORIGINS: "https://prospect-ui-one.vercel.app/,http://localhost:5173"
+DEFAULT_QUEUE_LIST_ID: "enrichment_queue"
+OUTREACH_READY_LIST_ID: "outreach_ready"
