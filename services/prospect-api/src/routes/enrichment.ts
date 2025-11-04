@@ -20,6 +20,12 @@ const enqueueSchema = z.object({
 });
 
 router.post("/enqueue_enrichment", async (req, res) => {
+  console.info("[enqueue] incoming request", {
+    jobType: req.body?.jobType ?? "linkedin",
+    listId: req.body?.listId,
+    prospectCount: Array.isArray(req.body?.prospectIds) ? req.body.prospectIds.length : 0,
+    localEnrichment: process.env.LOCAL_ENRICHMENT,
+  });
   const parsed = enqueueSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
@@ -64,20 +70,24 @@ router.post("/enqueue_enrichment", async (req, res) => {
     job_type: jobType,
   });
 
-  const updates: Record<string, unknown> =
+  const enrichmentUpdates: Record<string, unknown> =
     jobType === "domain"
       ? {
-          "enrichment.domain_status": "queued",
-          "enrichment.domain_run_id": runRef.id,
-          "enrichment.domain_queue_timestamp": now,
-          "enrichment.domain_updated_at": now,
+          domain_status: "queued",
+          domain_run_id: runRef.id,
+          domain_queue_timestamp: now,
+          domain_updated_at: now,
         }
       : {
-          "enrichment.status": ENRICHMENT_STATUS.queued,
-          "enrichment.queue_run_id": runRef.id,
-          "enrichment.queue_timestamp": now,
-          "enrichment.updated_at": now,
+          status: ENRICHMENT_STATUS.queued,
+          queue_run_id: runRef.id,
+          queue_timestamp: now,
+          updated_at: now,
         };
+
+  const updates: Record<string, unknown> = {
+    enrichment: enrichmentUpdates,
+  };
 
   if (effectiveListId) {
     updates.list_ids = FieldValue.arrayUnion(effectiveListId);

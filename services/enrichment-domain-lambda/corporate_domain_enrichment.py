@@ -13,6 +13,8 @@ from typing import List, Optional, Sequence
 
 import anthropic
 
+DEFAULT_ANTHROPIC_MODEL = "claude-3-haiku-20240307"
+
 PROMPT_TEMPLATE = """{base_prompt}
 
 <section>
@@ -194,10 +196,11 @@ def extract_tsv(text: str) -> Optional[str]:
   return None
 
 
-def send_prompt(prompt: str, model: str, temperature: float, api_key: Optional[str]) -> str:
+def send_prompt(prompt: str, model: Optional[str], temperature: float, api_key: Optional[str]) -> str:
+  selected_model = model or DEFAULT_ANTHROPIC_MODEL
   client = anthropic.Anthropic(api_key=api_key)
   response = client.beta.messages.create(
-    model=model,
+    model=selected_model,
     max_tokens=20_000,
     temperature=temperature,
     betas=["web-search-2025-03-05"],
@@ -219,7 +222,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
   parser.add_argument("--org-input", required=True, help="Path to organization list (TXT or CSV with 'Organization' column).")
   parser.add_argument("--people-input", help="Optional CSV of people/executives for keyword generation.")
   parser.add_argument("--output", required=True, help="Path to write the TSV result.")
-  parser.add_argument("--model", default="claude-sonnet-4-5-20250929", help="Claude model to use.")
+  parser.add_argument("--model", default=DEFAULT_ANTHROPIC_MODEL, help="Claude model to use.")
   parser.add_argument("--temperature", type=float, default=0.1, help="Sampling temperature.")
   parser.add_argument("--api-key", help="Anthropic API key (defaults to ANTHROPIC_API_KEY env var).")
   args = parser.parse_args(argv)

@@ -11,4 +11,6 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .env.local
-.env.development.local                  
+.env.development.local
+leadgen-475923-29d2eed038e0.json
+leadgen-475923-29d2eed038e0.json                

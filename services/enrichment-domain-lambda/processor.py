@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from google.cloud import firestore
 
-from corporate_domain_enrichment import build_prompt, extract_tsv, send_prompt
+from corporate_domain_enrichment import DEFAULT_ANTHROPIC_MODEL, build_prompt, extract_tsv, send_prompt
 
 from .utils import current_timestamp, get_firestore_client
 
@@ -123,7 +123,12 @@ def process_message(payload: Dict[str, Any]) -> None:
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY environment variable is required")
         prompt = build_prompt(organizations, people_table)
-        response_text = send_prompt(prompt, os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4.1"), float(os.getenv("ANTHROPIC_TEMPERATURE", "0.1")), api_key)
+        response_text = send_prompt(
+            prompt,
+            os.getenv("ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
+            float(os.getenv("ANTHROPIC_TEMPERATURE", "0.1")),
+            api_key,
+        )
         tsv = extract_tsv(response_text)
         if not tsv:
             raise RuntimeError("Failed to extract TSV from Anthropic response")
