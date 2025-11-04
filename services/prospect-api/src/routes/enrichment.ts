@@ -104,9 +104,15 @@ router.post("/enqueue_enrichment", async (req, res) => {
     await batch.commit();
   }
 
-  const queueUrl = process.env.ENRICHMENT_JOBS_QUEUE_URL;
+  const queueEnvKey =
+    jobType === "domain" ? "DOMAIN_JOBS_QUEUE_URL" : "ENRICHMENT_JOBS_QUEUE_URL";
+  const queueUrl =
+    jobType === "domain" ? process.env.DOMAIN_JOBS_QUEUE_URL : process.env.ENRICHMENT_JOBS_QUEUE_URL;
+
   if (!queueUrl) {
-    console.warn("[enqueue] ENRICHMENT_JOBS_QUEUE_URL not set; invoking local handler only.");
+    console.warn(
+      `[enqueue] ${queueEnvKey} not set; invoking local handler only.`,
+    );
     triggerLocal(jobType, runRef.id).catch((error) => {
       console.error("Local enrichment trigger failed:", error);
     });

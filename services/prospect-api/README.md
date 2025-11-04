@@ -139,13 +139,16 @@ The service is ready for Cloud Run / App Engine:
    ```
 4. Deploy via Cloud Run:
    ```bash
-   gcloud run deploy prospect-backend \
-     --image us-docker.pkg.dev/<PROJECT_ID>/prospect-backend/api \
-     --platform managed \
-     --region <REGION> \
-     --allow-unauthenticated \
+  gcloud run deploy prospect-backend \
+    --image us-docker.pkg.dev/<PROJECT_ID>/prospect-backend/api \
+    --platform managed \
+    --region <REGION> \
+    --allow-unauthenticated \
      --set-env-vars "DEFAULT_QUEUE_LIST_ID=..." \
      --set-env-vars "OUTREACH_READY_LIST_ID=..." \
+     --set-env-vars "ENRICHMENT_JOBS_QUEUE_URL=https://sqs.<REGION>.amazonaws.com/<ACCOUNT_ID>/linkedin-enrichment" \
+     --set-env-vars "DOMAIN_JOBS_QUEUE_URL=https://sqs.<REGION>.amazonaws.com/<ACCOUNT_ID>/domain-enrichment" \
+     --set-env-vars "AWS_REGION=<AWS_REGION>" \
      --set-env-vars "CORS_ALLOWED_ORIGINS=https://your-frontend-domain"
    ```
 3. Credentials:
