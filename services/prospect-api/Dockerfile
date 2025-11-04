@@ -14,6 +14,9 @@ RUN npm ci --workspace services/prospect-api --include-workspace-root=false
 COPY packages packages
 COPY services/prospect-api services/prospect-api
 
+# Ensure shared workspace is built so compiled outputs are available during API build
+RUN npm run build --workspace @prospect/shared-firestore
+
 # Build just the prospect-api workspace
 RUN npm run build --workspace services/prospect-api
 
