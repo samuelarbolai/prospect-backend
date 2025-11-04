@@ -63,7 +63,7 @@ def select_run_id(client: firestore.Client, explicit: Optional[str]) -> Optional
 
 
 def fetch_prospect_ids(client: firestore.Client, run_id: str) -> List[str]:
-    query = client.collection("prospects").where("enrichment.queue_run_id", "==", run_id)
+    query = client.collection("prospects").where("enrichment.domain_run_id", "==", run_id)
     ids = [doc.id for doc in query.stream()]
     if not ids:
         logging.warning("No prospects found for run %s", run_id)

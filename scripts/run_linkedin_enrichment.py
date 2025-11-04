@@ -51,7 +51,7 @@ def select_run_id(client: firestore.Client, explicit: Optional[str]) -> Optional
             return None
         data = doc.to_dict() or {}
         stage = data.get("stage")
-        if stage not in {"linkedin", "domain"}:
+        if stage and stage not in {"linkedin", "linkedin_completed"}:
             logging.warning("Run %s is already stage '%s'", explicit, stage)
         return explicit
 

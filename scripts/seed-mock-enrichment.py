@@ -109,6 +109,8 @@ def build_prospects(count: int) -> List[dict]:
                         "status": "pending",
                         "notes": "",
                         "queue_run_id": None,
+                        "domain_status": "pending",
+                        "domain_run_id": None,
                     },
                     "social": {
                         "linkedin": {

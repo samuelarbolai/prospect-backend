@@ -16,6 +16,7 @@ const enqueueSchema = z.object({
   listId: z.string().min(1),
   listTag: z.string().min(1).max(120).optional(),
   metadata: z.record(z.any()).optional(),
+  jobType: z.enum(["linkedin", "domain"]).optional(),
 });
 
 router.post("/enqueue_enrichment", async (req, res) => {
@@ -25,6 +26,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
   }
 
   const { prospectIds, listId, listTag, metadata } = parsed.data;
+  const jobType = parsed.data.jobType ?? "linkedin";
   const effectiveListId = listTag ?? process.env.DEFAULT_QUEUE_LIST_ID ?? null;
   const now = Timestamp.now();
   const runRef = db.collection("enrichment_runs").doc();
@@ -54,19 +56,28 @@ router.post("/enqueue_enrichment", async (req, res) => {
 
   await runRef.set({
     created_at: now,
-    status: ENRICHMENT_STATUS.queued,
+    status: "queued",
     prospect_count: prospectIds.length,
     list_tag: effectiveListId,
     metadata: metadata ?? null,
-    stage: "linkedin",
+    stage: jobType,
+    job_type: jobType,
   });
 
-  const updates = {
-    "enrichment.status": ENRICHMENT_STATUS.queued,
-    "enrichment.queue_run_id": runRef.id,
-    "enrichment.queue_timestamp": now,
-    "enrichment.updated_at": now,
-  } as Record<string, unknown>;
+  const updates: Record<string, unknown> =
+    jobType === "domain"
+      ? {
+          "enrichment.domain_status": "queued",
+          "enrichment.domain_run_id": runRef.id,
+          "enrichment.domain_queue_timestamp": now,
+          "enrichment.domain_updated_at": now,
+        }
+      : {
+          "enrichment.status": ENRICHMENT_STATUS.queued,
+          "enrichment.queue_run_id": runRef.id,
+          "enrichment.queue_timestamp": now,
+          "enrichment.updated_at": now,
+        };
 
   if (effectiveListId) {
     updates.list_ids = FieldValue.arrayUnion(effectiveListId);
@@ -86,7 +97,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
   const queueUrl = process.env.ENRICHMENT_JOBS_QUEUE_URL;
   if (!queueUrl) {
     console.warn("ENRICHMENT_JOBS_QUEUE_URL is not set; skipping queue publish.");
-    triggerLocalEnrichment(runRef.id).catch((error) => {
+    triggerLocal(jobType, runRef.id).catch((error) => {
       console.error("Local enrichment trigger failed:", error);
     });
   } else {
@@ -95,7 +106,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
       listId,
       listTag: effectiveListId,
       prospectIds,
-      jobType: "linkedin",
+      jobType,
     };
     await sqsClient.send(
       new SendMessageCommand({
@@ -104,7 +115,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
       }),
     );
     if (process.env.LOCAL_ENRICHMENT === "1") {
-      triggerLocalEnrichment(runRef.id).catch((error) => {
+      triggerLocal(jobType, runRef.id).catch((error) => {
         console.error("Local enrichment trigger failed:", error);
       });
     }
@@ -115,6 +126,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
     queued: affected,
     listTag: effectiveListId,
     listId,
+    jobType,
   });
 });
 
@@ -163,18 +175,18 @@ router.post("/tag_outreach_ready", async (req, res) => {
 
 export default router;
 
-function resolveScriptPath(envVar: string, fallback: string): string {
+function resolveScriptPath(envVar: string, fallback: string, repoRoot: string): string {
   const override = process.env[envVar];
   if (override && override.trim().length > 0) {
-    return path.isAbsolute(override) ? override : path.resolve(process.cwd(), override);
+    return path.isAbsolute(override) ? override : path.resolve(repoRoot, override);
   }
   return fallback;
 }
 
-function spawnScript(scriptPath: string, runId: string): Promise<void> {
+function spawnScript(repoRoot: string, scriptPath: string, runId: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const repoRoot = path.resolve(process.cwd(), "..", "..");
-    const child = spawn("python3", [scriptPath, "--run-id", runId], {
+    const absolute = path.isAbsolute(scriptPath) ? scriptPath : path.resolve(repoRoot, scriptPath);
+    const child = spawn("python3", [absolute, "--run-id", runId], {
       cwd: repoRoot,
       stdio: "inherit",
     });
@@ -183,27 +195,24 @@ function spawnScript(scriptPath: string, runId: string): Promise<void> {
       if (code === 0) {
         resolve();
       } else {
-        reject(new Error(`${scriptPath} exited with code ${code}`));
+        reject(new Error(`${absolute} exited with code ${code}`));
       }
     });
   });
 }
 
-async function triggerLocalEnrichment(runId: string): Promise<void> {
+async function triggerLocal(jobType: "linkedin" | "domain", runId: string): Promise<void> {
   if (process.env.LOCAL_ENRICHMENT === "0") {
     return;
   }
   const repoRoot = path.resolve(process.cwd(), "..", "..");
-  const defaultLinked = path.resolve(repoRoot, "scripts", "run_linkedin_enrichment.py");
-  const defaultDomain = path.resolve(repoRoot, "scripts", "run_domain_enrichment.py");
-
-  const linkedScript = resolveScriptPath("LOCAL_LINKEDIN_SCRIPT", defaultLinked);
-  const domainScript = resolveScriptPath("LOCAL_DOMAIN_SCRIPT", defaultDomain);
-
-  try {
-    await spawnScript(linkedScript, runId);
-    await spawnScript(domainScript, runId);
-  } catch (error) {
-    throw error;
+  if (jobType === "domain") {
+    const defaultDomain = path.resolve(repoRoot, "scripts", "run_domain_enrichment.py");
+    const script = resolveScriptPath("LOCAL_DOMAIN_SCRIPT", defaultDomain, repoRoot);
+    await spawnScript(repoRoot, script, runId);
+  } else {
+    const defaultLinked = path.resolve(repoRoot, "scripts", "run_linkedin_enrichment.py");
+    const script = resolveScriptPath("LOCAL_LINKEDIN_SCRIPT", defaultLinked, repoRoot);
+    await spawnScript(repoRoot, script, runId);
   }
 }

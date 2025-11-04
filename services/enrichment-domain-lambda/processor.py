@@ -71,15 +71,21 @@ def process_message(payload: Dict[str, Any]) -> None:
     client = get_firestore_client()
     run_id = payload.get("runId")
     prospect_ids = payload.get("prospectIds") or []
-
-    if not isinstance(prospect_ids, list) or not prospect_ids:
-        logger.warning("No prospectIds supplied to domain enrichment payload: %s", payload)
-        return
+    if not isinstance(prospect_ids, list):
+        prospect_ids = []
 
     docs: Dict[str, Dict[str, Any]] = {}
     doc_refs: Dict[str, firestore.DocumentReference] = {}
 
-    for prospect_id in prospect_ids:
+    source_ids = prospect_ids
+    if not source_ids and run_id:
+        query = client.collection("prospects").where("enrichment.domain_run_id", "==", run_id)
+        source_ids = [snap.id for snap in query.stream()]
+    if not source_ids:
+        logger.warning("No prospects supplied or found for domain run %s", run_id)
+        return
+
+    for prospect_id in source_ids:
         doc_ref = client.collection("prospects").document(prospect_id)
         snapshot = doc_ref.get()
         if snapshot.exists:
@@ -155,10 +161,11 @@ def process_message(payload: Dict[str, Any]) -> None:
                 update_payload["enrichment"]["vertical"] = vertical_value.strip()
             if keywords_value:
                 update_payload["enrichment"]["keywords"] = keywords_value.strip()
-            update_payload["enrichment"]["status"] = "completed"
+            update_payload["enrichment"]["domain_status"] = "completed"
+            update_payload["enrichment"]["domain_run_id"] = None
             success_count += 1
         else:
-            update_payload["enrichment"]["status"] = "partial"
+            update_payload["enrichment"]["domain_status"] = "partial"
             failures.append({"prospectId": prospect_id, "reason": "organization_not_found"})
 
         doc_ref.set(update_payload, merge=True)
@@ -175,7 +182,7 @@ def process_message(payload: Dict[str, Any]) -> None:
             "completed_at": timestamp,
             "success_count": success_count,
             "failure_count": len(docs) - success_count,
-            "stage": "complete",
+            "stage": "domain_completed",
             "domain_completed": True,
         }
         if failures:

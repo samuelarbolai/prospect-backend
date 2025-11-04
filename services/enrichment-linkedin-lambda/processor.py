@@ -240,7 +240,7 @@ def process_message(payload: Dict[str, Any]) -> None:
             "success_count": success_count,
             "failure_count": len(rows) - success_count,
             "list_id": list_id,
-            "stage": "domain",
+            "stage": "linkedin_completed",
             "linkedin_completed": True,
         }
         if failure_notes:
