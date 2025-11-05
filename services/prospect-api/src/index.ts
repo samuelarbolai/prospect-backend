@@ -19,22 +19,6 @@ const corsOptions: CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
-app.use((req, res, next) => {
-  const originHeader = req.get("origin");
-  const allowAll = allowedOrigins.length === 0;
-  const matchedOrigin =
-    allowAll || (originHeader && allowedOrigins.includes(originHeader))
-      ? originHeader ?? "*"
-      : allowedOrigins[0] ?? "*";
-  res.setHeader("Access-Control-Allow-Origin", matchedOrigin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  next();
-});
-
 app.use(express.json());
 
 app.get("/healthz", (_req, res) => {
@@ -44,18 +28,24 @@ app.get("/healthz", (_req, res) => {
 app.use("/api", enrichmentRouter);
 app.use("/api", prospectsRouter);
 
+// Final error handler
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err);
-  if (!res.headersSent) {
-    const originHeader = req.get("origin");
-    const allowAll = allowedOrigins.length === 0;
-    const matchedOrigin =
-      allowAll || (originHeader && allowedOrigins.includes(originHeader))
-        ? originHeader ?? "*"
-        : allowedOrigins[0] ?? "*";
-    res.setHeader("Access-Control-Allow-Origin", matchedOrigin);
-    res.setHeader("Vary", "Origin");
+  // Note: The error is logged by the Cloud Run environment, but we log it here for visibility in local dev
+  console.error("Unhandled error:", err);
+
+  if (res.headersSent) {
+    return;
   }
+
+  // Set CORS headers for the error response
+  const originHeader = req.get("origin");
+  if (originHeader && allowedOrigins.includes(originHeader)) {
+    res.setHeader("Access-Control-Allow-Origin", originHeader);
+    res.setHeader("Vary", "Origin");
+  } else if (allowedOrigins.length === 0) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+
   res.status(500).json({ error: "Internal server error" });
 });
 
