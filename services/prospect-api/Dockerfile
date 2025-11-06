@@ -1,14 +1,10 @@
 FROM node:20-slim AS base
+ARG CACHE_BUST=2
 
 WORKDIR /app
 
-# Copy service manifest files
-# Note: These files are now relative to the current folder, not a monorepo root.
 COPY package.json package-lock.json ./
-
-# Install dependencies for this service
-# No need for --workspace flags
-RUN npm ci
+RUN npm ci --no-cache
 
 # Copy all source files
 # Note: You only need to copy 'src' and any other necessary files now.

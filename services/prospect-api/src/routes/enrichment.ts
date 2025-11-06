@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { z } from "zod";
-import { ENRICHMENT_STATUS, prospectCollection } from "@prospect/shared-firestore";
+import { ENRICHMENT_STATUS, prospectCollection } from "../lib/shared-firestore/index.js";
 import { db, FieldValue, Timestamp } from "../config.js";
 import { sqsClient } from "../aws/sqsClient.js";
 import { chunk } from "../utils.js";

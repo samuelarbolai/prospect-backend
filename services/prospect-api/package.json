@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.922.0",
-    "@prospect/shared-firestore": "file:../../packages/shared-firestore",
+
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",

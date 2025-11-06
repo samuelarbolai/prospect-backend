@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { ENRICHMENT_STATUS, EnrichmentStatus, prospectCollection } from "@prospect/shared-firestore";
+import { ENRICHMENT_STATUS, EnrichmentStatus, prospectCollection } from "../lib/shared-firestore/index.js";
 import { FieldPath, db } from "../config.js";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase-admin/firestore";
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { listCollection, prospectCollection } from "@prospect/shared-firestore";
+import { listCollection, prospectCollection } from "../lib/shared-firestore/index.js";
 import { FieldValue, Timestamp, db } from "../config.js";
 import { chunk } from "../utils.js";
 
