@@ -4,7 +4,7 @@ import enrichmentRouter from "./routes/enrichment.js";
 import prospectsRouter from "./routes/prospects.js";
 
 const app = express();
-const port = Number(process.env.PORT ?? 4000);
+const port = Number(process.env.PORT);
 
 const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? "")
   .split(",")
@@ -49,6 +49,12 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
   res.status(500).json({ error: "Internal server error" });
 });
 
+console.log(`[Startup] Attempting to listen on port: ${port}`);
+if (isNaN(port)) {
+  console.error("[Startup] Error: Port is not a number. Exiting.");
+  process.exit(1);
+}
+
 app.listen(port, () => {
-  console.log(`Prospect pipeline backend listening on port ${port}`);
+  console.log(`[Startup] Prospect pipeline backend successfully listening on port ${port}`);
 });

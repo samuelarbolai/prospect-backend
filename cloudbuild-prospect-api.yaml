@@ -6,8 +6,8 @@ steps:
         "-f",
         "services/prospect-api/Dockerfile",
         "-t",
-        "us-docker.pkg.dev/$PROJECT_ID/prospect-backend/api",
+        "us-docker.pkg.dev/$PROJECT_ID/prospect-backend/api:${_IMAGE_TAG}",
         ".",
       ]
 images:
-  - "us-docker.pkg.dev/$PROJECT_ID/prospect-backend/api"
+  - "us-docker.pkg.dev/$PROJECT_ID/prospect-backend/api:${_IMAGE_TAG}"

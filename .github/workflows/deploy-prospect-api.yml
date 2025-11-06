@@ -1,9 +1,8 @@
-name: Backend CI
+name: Deploy Prospect API
 
 on:
   push:
     branches: [main]
-  pull_request:
 
 jobs:
   build-and-test:
@@ -37,3 +36,29 @@ jobs:
         env:
           PROSPECT_API_BASE: https://prospect-api-633098049477.us-central1.run.app
           LISTS_API_BASE: https://prospect-lists-api-633098049477.us-central1.run.app
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # Required for authenticating to GCP
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/YOUR_POOL_ID/providers/YOUR_PROVIDER_ID'
+          service_account: 'YOUR_GCP_SERVICE_ACCOUNT_EMAIL'
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: prospect-backend
+          region: us-central1
+          source: . # Build from the root of the repository
