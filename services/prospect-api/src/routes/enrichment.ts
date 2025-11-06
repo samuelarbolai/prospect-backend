@@ -20,6 +20,7 @@ const enqueueSchema = z.object({
 });
 
 router.post("/enqueue_enrichment", async (req, res) => {
+  console.log("Entering /enqueue_enrichment route handler");
   console.info("[enqueue] incoming request", {
     jobType: req.body?.jobType ?? "linkedin",
     listId: req.body?.listId,
@@ -153,6 +154,7 @@ const tagReadySchema = z.object({
 });
 
 router.post("/tag_outreach_ready", async (req, res) => {
+  console.log("Entering /tag_outreach_ready route handler");
   const parsed = tagReadySchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
@@ -193,6 +195,7 @@ router.post("/tag_outreach_ready", async (req, res) => {
 export default router;
 
 function resolveScriptPath(envVar: string, fallback: string, repoRoot: string): string {
+  console.log("Entering resolveScriptPath function");
   const override = process.env[envVar];
   if (override && override.trim().length > 0) {
     return path.isAbsolute(override) ? override : path.resolve(repoRoot, override);
@@ -201,6 +204,7 @@ function resolveScriptPath(envVar: string, fallback: string, repoRoot: string): 
 }
 
 function spawnScript(repoRoot: string, scriptPath: string, runId: string): Promise<void> {
+  console.log("Entering spawnScript function");
   return new Promise((resolve, reject) => {
     const absolute = path.isAbsolute(scriptPath) ? scriptPath : path.resolve(repoRoot, scriptPath);
     console.info(`[local] launching ${absolute} --run-id ${runId}`);
@@ -221,6 +225,7 @@ function spawnScript(repoRoot: string, scriptPath: string, runId: string): Promi
 }
 
 async function triggerLocal(jobType: "linkedin" | "domain", runId: string): Promise<void> {
+  console.log("Entering triggerLocal function");
   if (process.env.LOCAL_ENRICHMENT === "0") {
     console.info(`[local] skipping ${jobType} trigger for run ${runId} (LOCAL_ENRICHMENT=0)`);
     return;
