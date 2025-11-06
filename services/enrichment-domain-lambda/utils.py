@@ -21,10 +21,6 @@ def _ensure_credentials_file() -> None:
         return
 
     inline_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    inline_b64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_B64")
-    if not inline_json and inline_b64:
-        inline_json = base64.b64decode(inline_b64).decode("utf-8")
-
     if not inline_json:
         return
 

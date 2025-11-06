@@ -80,10 +80,10 @@ router.post("/enqueue_enrichment", async (req, res) => {
           domain_updated_at: now,
         }
       : {
-          status: ENRICHMENT_STATUS.queued,
-          queue_run_id: runRef.id,
-          queue_timestamp: now,
-          updated_at: now,
+          linkedin_status: ENRICHMENT_STATUS.queued,
+          linkedin_run_id: runRef.id,
+          linkedin_queue_timestamp: now,
+          linkedin_updated_at: now,
         };
 
   const updates: Record<string, unknown> = {

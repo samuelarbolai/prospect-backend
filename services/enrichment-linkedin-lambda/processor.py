@@ -109,9 +109,9 @@ def _apply_updates(
 
     update_payload: Dict[str, Any] = {
         "enrichment": {
-            "status": enrichment_status,
-            "last_run_at": current_timestamp(),
-            "updated_at": current_timestamp(),
+            "linkedin_status": enrichment_status,
+            "linkedin_last_run_at": current_timestamp(),
+            "linkedin_updated_at": current_timestamp(),
         },
         "social": {
             "linkedin": {
@@ -122,7 +122,7 @@ def _apply_updates(
     }
 
     if run_id:
-        update_payload.setdefault("enrichment", {})["queue_run_id"] = run_id
+        update_payload.setdefault("enrichment", {})["linkedin_run_id"] = run_id
 
     if notes_value:
         update_payload["enrichment"]["notes"] = notes_value
@@ -238,10 +238,10 @@ def process_message(payload: Dict[str, Any]) -> None:
         elif failure_notes:
             summary_status = "partial"
         run_update = {
-            "status": summary_status,
-            "completed_at": current_timestamp(),
-            "success_count": success_count,
-            "failure_count": len(rows) - success_count,
+            "linkedin_status": summary_status,
+            "linkedin_completed_at": current_timestamp(),
+            "linkedin_success_count": success_count,
+            "linkedin_failure_count": len(rows) - success_count,
             "list_id": list_id,
             "stage": "linkedin_completed",
             "linkedin_completed": True,

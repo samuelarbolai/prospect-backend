@@ -2,3 +2,4 @@
 leadgen-475923-29d2eed038e0.json
 build/
 domain_enrichment.zip
+.env.example
