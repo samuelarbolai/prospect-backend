@@ -2,31 +2,31 @@ FROM node:20-slim AS base
 
 WORKDIR /app
 
-# Copy root workspace manifests and the service manifests
+# Copy service manifest files
+# Note: These files are now relative to the current folder, not a monorepo root.
 COPY package.json package-lock.json ./
-COPY packages/shared-firestore/package.json packages/shared-firestore/
-COPY services/prospect-api/package.json services/prospect-api/
 
-# Install only this workspace's dependencies
-RUN npm ci --workspace services/prospect-api --include-workspace-root=false
+# Install dependencies for this service
+# No need for --workspace flags
+RUN npm ci
 
-# Copy workspace sources
-COPY packages packages
-COPY services/prospect-api services/prospect-api
+# Copy all source files
+# Note: You only need to copy 'src' and any other necessary files now.
+COPY . .
 
-# Ensure shared workspace is built so compiled outputs are available during API build
-RUN npm run build --workspace @prospect/shared-firestore
+# Build the application
+# Assuming your package.json has a 'build' script
+RUN npm run build
 
-# Build just the prospect-api workspace
-RUN npm run build --workspace services/prospect-api
-
-# Prune dev dependencies scoped to the workspace
-RUN npm prune --omit=dev --workspace services/prospect-api --include-workspace-root=false
+# Prune dev dependencies
+RUN npm prune --omit=dev
 
 ENV NODE_ENV=production
 
-WORKDIR /app/services/prospect-api
+# The working directory is already /app, but we can set it for clarity if needed
+# WORKDIR /app 
 
 EXPOSE 8080
 
+# The compiled output is likely in /app/dist
 CMD ["node", "dist/index.js"]
