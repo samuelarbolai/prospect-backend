@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+print("--- [processor.py] Top-level: Starting module load. ---")
+
 import json
 import logging
 import os
@@ -22,6 +24,8 @@ try:
 except ImportError:  # pragma: no cover - fallback for zipped lambda package
     from utils import build_keywords_from_prospect, current_timestamp, get_firestore_client  # type: ignore[import]
 
+print("--- [processor.py] Top-level: Module load complete. ---")
+
 logger = logging.getLogger(__name__)
 
 KEYWORD_COLUMN = "Keywords"
@@ -34,7 +38,8 @@ DRY_RUN_ENV = "ENRICHMENT_DRY_RUN"
 
 
 def _load_configuration() -> Dict[str, Optional[str]]:
-    return {
+    print("--- [processor.py] _load_configuration: Loading environment variables. ---")
+    config = {
         "google_api_key": os.getenv("GOOGLE_API_KEY"),
         "google_service_account": os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE"),
         "google_service_account_scopes": os.getenv("GOOGLE_SERVICE_ACCOUNT_SCOPES"),
@@ -43,6 +48,8 @@ def _load_configuration() -> Dict[str, Optional[str]]:
         "openai_model": os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
         "prompt_path": os.getenv("LINKEDIN_PROMPT_PATH"),
     }
+    print(f"--- [processor.py] _load_configuration: Configuration loaded: {config} ---")
+    return config
 
 
 def _parse_scopes(raw: Optional[str]) -> Optional[List[str]]:
@@ -53,21 +60,26 @@ def _parse_scopes(raw: Optional[str]) -> Optional[List[str]]:
 
 
 def _load_prompt_text(custom_path: Optional[str]) -> str:
+    print(f"--- [processor.py] _load_prompt_text: Loading prompt from '{custom_path or 'default'}'. ---")
     if custom_path:
         path = Path(custom_path)
     else:
         path = Path(__file__).with_name("prompt.txt")
-    return load_prompt(str(path))
+    prompt = load_prompt(str(path))
+    print("--- [processor.py] _load_prompt_text: Prompt loaded successfully. ---")
+    return prompt
 
 
 def _build_rows(
     client: firestore.Client,
     prospect_ids: List[str],
 ) -> tuple[List[Dict[str, Any]], Dict[str, firestore.DocumentReference]]:
+    print(f"--- [processor.py] _build_rows: Building rows for {len(prospect_ids)} prospects. ---")
     rows: List[Dict[str, Any]] = []
     refs: Dict[str, firestore.DocumentReference] = {}
 
     for prospect_id in prospect_ids:
+        print(f"--- [processor.py] _build_rows: Processing prospect '{prospect_id}'. ---")
         doc_ref = client.collection("prospects").document(prospect_id)
         snapshot = doc_ref.get()
         if not snapshot.exists:
@@ -91,6 +103,7 @@ def _build_rows(
         rows.append(row)
         refs[prospect_id] = doc_ref
 
+    print(f"--- [processor.py] _build_rows: Built {len(rows)} rows. ---")
     return rows, refs
 
 
@@ -99,6 +112,8 @@ def _apply_updates(
     row: Dict[str, Any],
     run_id: Optional[str],
 ) -> None:
+    prospect_id = row.get("ProspectId")
+    print(f"--- [processor.py] _apply_updates: Applying updates for prospect '{prospect_id}'. ---")
     link_value = row.get(LINK_COLUMN) or None
     status_value = row.get(STATUS_COLUMN) or None
     openai_blob = row.get(OPENAI_COLUMN) or None
@@ -131,7 +146,9 @@ def _apply_updates(
     if results_blob:
         update_payload["enrichment"]["linkedin_results"] = results_blob
 
+    print(f"--- [processor.py] _apply_updates: Update payload for '{prospect_id}': {update_payload} ---")
     doc_ref.set(update_payload, merge=True)
+    print(f"--- [processor.py] _apply_updates: Firestore updated for prospect '{prospect_id}'. ---")
 
 
 def _dry_run_fill(rows: List[Dict[str, Any]]) -> None:
@@ -144,7 +161,9 @@ def _dry_run_fill(rows: List[Dict[str, Any]]) -> None:
 
 
 def process_message(payload: Dict[str, Any]) -> None:
+    print(f"--- [processor.py] process_message: Received SQS payload: {payload} ---")
     client = get_firestore_client()
+    print("--- [processor.py] process_message: Firestore client created. ---")
     run_id = payload.get("runId")
     list_id = payload.get("listId")
     prospect_ids = payload.get("prospectIds") or []
@@ -168,9 +187,11 @@ def process_message(payload: Dict[str, Any]) -> None:
     failure_notes: List[Dict[str, Any]] = []
 
     if dry_run:
+        print(f"--- [processor.py] process_message: Running in DRY_RUN mode for runId={run_id}. ---")
         logger.info("Running LinkedIn enrichment in dry-run mode. runId=%s", run_id)
         _dry_run_fill(rows)
     else:
+        print(f"--- [processor.py] process_message: Running in LIVE mode for runId={run_id}. ---")
         google_api_key, google_headers = build_google_auth(
             api_key=config.get("google_api_key"),
             service_account_path=config.get("google_service_account"),
@@ -187,6 +208,7 @@ def process_message(payload: Dict[str, Any]) -> None:
             logger.error("Missing required configuration: %s", ", ".join(missing))
             raise RuntimeError("LinkedIn enrichment configuration incomplete.")
 
+        print("--- [processor.py] process_message: Calling enrich_rows. ---")
         enrich_rows(
             rows=rows,
             keyword_column=KEYWORD_COLUMN,
@@ -206,6 +228,7 @@ def process_message(payload: Dict[str, Any]) -> None:
             sleep_seconds=0.0,
             headers=google_headers,
         )
+        print("--- [processor.py] process_message: enrich_rows completed. ---")
 
     for row in rows:
         prospect_id = row.get("ProspectId")
@@ -231,6 +254,7 @@ def process_message(payload: Dict[str, Any]) -> None:
             failure_notes.append({"prospectId": prospect_id, "error": str(exc)})
 
     if run_id:
+        print(f"--- [processor.py] process_message: Updating enrichment_runs document for runId={run_id}. ---")
         run_ref = client.collection("enrichment_runs").document(run_id)
         summary_status = "completed"
         if failure_notes and success_count == 0:
@@ -249,6 +273,7 @@ def process_message(payload: Dict[str, Any]) -> None:
         if failure_notes:
             run_update["failures"] = failure_notes
         run_ref.set(run_update, merge=True)
+        print(f"--- [processor.py] process_message: enrichment_runs document updated. ---")
 
     logger.info(
         "LinkedIn enrichment finished. success=%d total=%d dry_run=%s runId=%s",
@@ -257,3 +282,4 @@ def process_message(payload: Dict[str, Any]) -> None:
         dry_run,
         run_id,
     )
+    print(f"--- [processor.py] process_message: LinkedIn enrichment finished for runId={run_id}. ---")

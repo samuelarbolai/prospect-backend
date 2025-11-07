@@ -22,7 +22,7 @@ const enqueueSchema = z.object({
 router.post("/enqueue_enrichment", async (req, res) => {
   console.log("Entering /enqueue_enrichment route handler");
   console.info("[enqueue] incoming request", {
-    jobType: req.body?.jobType ?? "linkedin",
+    jobType: req.body?.jobType ?? "Not provided",
     listId: req.body?.listId,
     prospectCount: Array.isArray(req.body?.prospectIds) ? req.body.prospectIds.length : 0,
     localEnrichment: process.env.LOCAL_ENRICHMENT,
@@ -80,7 +80,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
           domain_updated_at: now,
         }
       : {
-          linkedin_status: ENRICHMENT_STATUS.queued,
+          linkedin_status: "queued",
           linkedin_run_id: runRef.id,
           linkedin_queue_timestamp: now,
           linkedin_updated_at: now,
@@ -106,9 +106,9 @@ router.post("/enqueue_enrichment", async (req, res) => {
   }
 
   const queueEnvKey =
-    jobType === "domain" ? "DOMAIN_JOBS_QUEUE_URL" : "ENRICHMENT_JOBS_QUEUE_URL";
+    jobType === "domain" ? "DOMAIN_JOBS_QUEUE_URL" : "LINKEDIN_JOBS_QUEUE_URL";
   const queueUrl =
-    jobType === "domain" ? process.env.DOMAIN_JOBS_QUEUE_URL : process.env.ENRICHMENT_JOBS_QUEUE_URL;
+    jobType === "domain" ? process.env.DOMAIN_JOBS_QUEUE_URL : process.env.LINKEDIN_JOBS_QUEUE_URL;
 
   if (!queueUrl) {
     console.warn(

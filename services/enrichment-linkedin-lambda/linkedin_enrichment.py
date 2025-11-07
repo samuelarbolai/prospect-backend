@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+print("--- [linkedin_enrichment.py] Starting script execution. ---")
+
 import argparse
 import csv
 import json
@@ -30,6 +32,7 @@ except ImportError:
     service_account = None  # type: ignore[assignment]
     GoogleAuthRequest = None  # type: ignore[assignment]
 
+print("--- [linkedin_enrichment.py] Finished imports. ---")
 
 GOOGLE_SEARCH_ENDPOINT = "https://www.googleapis.com/customsearch/v1"
 DEFAULT_OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
@@ -454,9 +457,11 @@ def enrich_rows(
     headers: Optional[Dict[str, str]],
 ) -> None:
     total = len(rows)
+    print(f"--- [enrich_rows] Starting enrichment for {total} rows. ---")
     logging.info("Processing %d rows.", total)
 
     for idx, row in enumerate(rows, 1):
+        print(f"--- [enrich_rows] Processing row {idx}/{total}. ---")
         keywords = (row.get(keyword_column) or "").strip()
         logging.debug("Row %d/%d keywords: %s", idx, total, keywords)
 
@@ -469,6 +474,7 @@ def enrich_rows(
                 row[openai_response_column] = message
 
         if not keywords:
+            print(f"--- [enrich_rows] Row {idx} skipped: missing keywords. ---")
             logging.warning(
                 "Row %d skipped: missing keywords in column '%s'.", idx, keyword_column
             )
@@ -480,6 +486,7 @@ def enrich_rows(
             continue
 
         try:
+            print(f"--- [enrich_rows] Row {idx}: Fetching Google results for keywords: {keywords} ---")
             results = fetch_google_results(
                 api_key=api_key,
                 cse_id=cse_id,
@@ -488,7 +495,9 @@ def enrich_rows(
                 timeout=timeout,
                 headers=headers,
             )
+            print(f"--- [enrich_rows] Row {idx}: Found {len(results)} Google results. ---")
         except Exception as exc:
+            print(f"--- [enrich_rows] Row {idx}: Google search failed. Error: {exc} ---")
             logging.exception("Google search failed for row %d with query '%s'.", idx, keywords)
             row[linkedin_column] = ""
             _set_status(f"GOOGLE_ERROR: {short_exception(exc)}")
@@ -502,6 +511,7 @@ def enrich_rows(
             row[results_column] = json.dumps(results, ensure_ascii=False)
 
         if not results:
+            print(f"--- [enrich_rows] Row {idx}: No Google results. ---")
             logging.warning("No Google results for row %d query '%s'.", idx, keywords)
             row[linkedin_column] = ""
             _set_status("NO_GOOGLE_RESULTS")
@@ -510,13 +520,18 @@ def enrich_rows(
             continue
 
         try:
+            print(f"--- [enrich_rows] Row {idx}: Calling OpenAI for evaluation. ---")
             messages = build_openai_messages(prompt_text, keywords, results)
             response_text = call_openai_chat(openai_key, openai_model, messages, temperature)
             payload = extract_json_from_text(response_text)
             _set_openai_response(response_text)
             if payload is None:
+                print(f"--- [enrich_rows] Row {idx}: OpenAI response did not contain valid JSON. ---")
                 _set_status("OPENAI_NO_JSON")
+            else:
+                print(f"--- [enrich_rows] Row {idx}: OpenAI evaluation successful. ---")
         except Exception as exc:
+            print(f"--- [enrich_rows] Row {idx}: OpenAI call failed. Error: {exc} ---")
             logging.exception("OpenAI call failed for row %d query '%s'.", idx, keywords)
             payload = None
             row[linkedin_column] = ""
@@ -569,6 +584,7 @@ def enrich_rows(
             if status_column and not row.get(status_column):
                 _set_status("OPENAI_NO_LINK")
 
+        print(f"--- [enrich_rows] Row {idx}: Finished processing. Selected link: {selected_link or '<none>'} ---")
         logging.info(
             "Row %d/%d processed. Selected link: %s",
             idx,
@@ -577,6 +593,7 @@ def enrich_rows(
         )
 
         _maybe_sleep(sleep_seconds)
+    print("--- [enrich_rows] Enrichment process completed. ---")
 
 
 def _maybe_sleep(duration: float) -> None:
