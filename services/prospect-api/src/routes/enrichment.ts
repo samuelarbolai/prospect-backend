@@ -8,8 +8,10 @@ import { chunk } from "../utils.js";
 import path from "path";
 import { spawn } from "child_process";
 import type { DocumentSnapshot, DocumentData } from "firebase-admin/firestore";
+import { SessionManager } from "../lib/pricing/sessionManager.js";
 
 const router = Router();
+const sessionManager = new SessionManager(db);
 
 const enqueueSchema = z.object({
   prospectIds: z.array(z.string().min(1)).nonempty(),
@@ -17,6 +19,7 @@ const enqueueSchema = z.object({
   listTag: z.string().min(1).max(120).optional(),
   metadata: z.record(z.any()).optional(),
   jobType: z.enum(["linkedin", "domain"]).optional(),
+  sessionId: z.string().optional(),
 });
 
 router.post("/enqueue_enrichment", async (req, res) => {
@@ -32,7 +35,7 @@ router.post("/enqueue_enrichment", async (req, res) => {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { prospectIds, listId, listTag, metadata } = parsed.data;
+  const { prospectIds, listId, listTag, metadata, sessionId } = parsed.data;
   const jobType = parsed.data.jobType ?? "linkedin";
   const effectiveListId = listTag ?? process.env.DEFAULT_QUEUE_LIST_ID ?? null;
   const now = Timestamp.now();
@@ -59,6 +62,19 @@ router.post("/enqueue_enrichment", async (req, res) => {
     return res.status(400).json({
       error: "Selected prospects are not all part of the provided list.",
     });
+  }
+
+  // Record pricing transaction if sessionId provided
+  let transactionCost = 0;
+  if (sessionId) {
+    try {
+      const prospectCount = prospectIds.length;
+      transactionCost = await sessionManager.recordTransaction(sessionId, prospectIds, prospectCount);
+      console.info("[pricing] recorded transaction", { sessionId, prospectCount, cost: transactionCost, jobType });
+    } catch (error) {
+      console.error("[pricing] failed to record transaction:", error);
+      return res.status(500).json({ error: "Failed to record pricing transaction" });
+    }
   }
 
   await runRef.set({

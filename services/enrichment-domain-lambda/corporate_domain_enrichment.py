@@ -11,9 +11,18 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
 
-import anthropic
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, skip
 
-DEFAULT_ANTHROPIC_MODEL = "claude-3-haiku-20240307"
+# import anthropic  # Commented out for migration to GPT-5
+import openai
+
+# DEFAULT_ANTHROPIC_MODEL = "claude-3-haiku-20240307"  # Commented out
+DEFAULT_GPT_MODEL = "gpt-5-2025-08-07"
 
 PROMPT_TEMPLATE = """{base_prompt}
 
@@ -196,12 +205,96 @@ def extract_tsv(text: str) -> Optional[str]:
   return None
 
 
+import requests
+import json
+
+def web_search(query: str) -> str:
+  """Perform web search using DuckDuckGo API"""
+  try:
+    url = f"https://api.duckduckgo.com/?q={query}&format=json&no_html=1&skip_disambig=1"
+    response = requests.get(url, timeout=10)
+    data = response.json()
+    
+    results = []
+    if data.get('Abstract'):
+      results.append(f"Summary: {data['Abstract']}")
+    if data.get('AbstractURL'):
+      results.append(f"Source: {data['AbstractURL']}")
+    
+    for topic in data.get('RelatedTopics', [])[:3]:
+      if isinstance(topic, dict) and topic.get('Text'):
+        results.append(f"Related: {topic['Text']}")
+    
+    return "\n".join(results) if results else f"No information found for: {query}"
+  except Exception as e:
+    return f"Search failed: {str(e)}"
+
 def send_prompt(prompt: str, model: Optional[str], temperature: float, api_key: Optional[str]) -> str:
-  selected_model = model or DEFAULT_ANTHROPIC_MODEL
+  selected_model = model or DEFAULT_GPT_MODEL
+  client = openai.OpenAI(api_key=api_key)
+  
+  # Define web search function
+  tools = [{
+    "type": "function",
+    "function": {
+      "name": "web_search",
+      "description": "Search the web for current information about organizations and domains",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The search query"
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  }]
+  
+  response = client.chat.completions.create(
+    model=selected_model,
+    messages=[{"role": "user", "content": prompt}],
+    tools=tools,
+    tool_choice="auto",
+    max_completion_tokens=20000
+  )
+  
+  message = response.choices[0].message
+  if message.tool_calls:
+    messages = [
+      {"role": "user", "content": prompt},
+      message
+    ]
+    
+    for tool_call in message.tool_calls:
+      if tool_call.function.name == "web_search":
+        args = json.loads(tool_call.function.arguments)
+        search_result = web_search(args["query"])
+        messages.append({
+          "role": "tool",
+          "tool_call_id": tool_call.id,
+          "content": search_result
+        })
+    
+    final_response = client.chat.completions.create(
+      model=selected_model,
+      messages=messages,
+      max_completion_tokens=20000
+    )
+    return final_response.choices[0].message.content.strip()
+  
+  return message.content.strip()
+
+def send_prompt_claude(prompt: str, model: Optional[str], temperature: float, api_key: Optional[str]) -> str:
+  """Original Claude implementation for comparison"""
+  import anthropic
+  import os
+  selected_model = model or os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
   client = anthropic.Anthropic(api_key=api_key)
   response = client.beta.messages.create(
     model=selected_model,
-    max_tokens=20_000,
+    max_tokens=4000,  # Reduced for Claude Haiku limit
     temperature=temperature,
     betas=["web-search-2025-03-05"],
     tools=[{"name": "web_search", "type": "web_search_20250305"}],
@@ -216,15 +309,36 @@ def send_prompt(prompt: str, model: Optional[str], temperature: float, api_key: 
       texts.append(block.get("text", ""))
   return "\n".join(texts).strip()
 
+# Commented out Anthropic implementation:
+# def send_prompt(prompt: str, model: Optional[str], temperature: float, api_key: Optional[str]) -> str:
+#   selected_model = model or DEFAULT_ANTHROPIC_MODEL
+#   client = anthropic.Anthropic(api_key=api_key)
+#   response = client.beta.messages.create(
+#     model=selected_model,
+#     max_tokens=20_000,
+#     temperature=temperature,
+#     betas=["web-search-2025-03-05"],
+#     tools=[{"name": "web_search", "type": "web_search_20250305"}],
+#     messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+#   )
+#   texts = []
+#   for block in response.content:
+#     block_type = getattr(block, "type", None)
+#     if block_type == "text" and hasattr(block, "text"):
+#       texts.append(block.text)
+#     elif isinstance(block, dict) and block.get("type") == "text":
+#       texts.append(block.get("text", ""))
+#   return "\n".join(texts).strip()
+
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument("--org-input", required=True, help="Path to organization list (TXT or CSV with 'Organization' column).")
   parser.add_argument("--people-input", help="Optional CSV of people/executives for keyword generation.")
   parser.add_argument("--output", required=True, help="Path to write the TSV result.")
-  parser.add_argument("--model", default=DEFAULT_ANTHROPIC_MODEL, help="Claude model to use.")
+  parser.add_argument("--model", default=DEFAULT_GPT_MODEL, help="GPT model to use.")
   parser.add_argument("--temperature", type=float, default=0.1, help="Sampling temperature.")
-  parser.add_argument("--api-key", help="Anthropic API key (defaults to ANTHROPIC_API_KEY env var).")
+  parser.add_argument("--api-key", help="OpenAI API key (defaults to OPENAI_API_KEY env var).")
   args = parser.parse_args(argv)
 
   orgs = read_organizations(Path(args.org_input))
@@ -233,9 +347,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
   people_table = read_people_table(Path(args.people_input)) if args.people_input else None
   prompt = build_prompt(orgs, people_table)
 
-  api_key = args.api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY_WORKSPACE")
+  api_key = args.api_key or os.getenv("OPENAI_API_KEY")
   if not api_key:
-    raise SystemExit("Anthropic API key not provided. Set ANTHROPIC_API_KEY or use --api-key.")
+    raise SystemExit("OpenAI API key not provided. Set OPENAI_API_KEY or use --api-key.")
+
+  # Commented out Anthropic API key handling:
+  # api_key = args.api_key or os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY_WORKSPACE")
+  # if not api_key:
+  #   raise SystemExit("Anthropic API key not provided. Set ANTHROPIC_API_KEY or use --api-key.")
 
   response_text = send_prompt(prompt, args.model, args.temperature, api_key)
   tsv = extract_tsv(response_text)

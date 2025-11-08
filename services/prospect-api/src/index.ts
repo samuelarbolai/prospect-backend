@@ -2,6 +2,7 @@ import cors, { CorsOptions } from "cors";
 import express from "express";
 import enrichmentRouter from "./routes/enrichment.js";
 import prospectsRouter from "./routes/prospects.js";
+import pricingRouter from "./routes/pricing.js";
 
 const app = express();
 const port = Number(process.env.PORT);
@@ -27,6 +28,7 @@ app.get("/healthz", (_req, res) => {
 
 app.use("/api", enrichmentRouter);
 app.use("/api", prospectsRouter);
+app.use("/api/pricing", pricingRouter);
 
 // Final error handler
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {

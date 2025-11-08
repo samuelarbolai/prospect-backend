@@ -165,6 +165,7 @@ def process_message(payload: Dict[str, Any]) -> None:
     client = get_firestore_client()
     print("--- [processor.py] process_message: Firestore client created. ---")
     run_id = payload.get("runId")
+    print(f"--- [processor.py] Starting LinkedIn enrichment for runId: {run_id} ---")
     list_id = payload.get("listId")
     prospect_ids = payload.get("prospectIds") or []
 

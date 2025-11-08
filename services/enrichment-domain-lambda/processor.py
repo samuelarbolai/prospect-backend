@@ -11,7 +11,8 @@ from typing import Any, Dict, List, Optional
 
 from google.cloud import firestore
 
-from corporate_domain_enrichment import DEFAULT_ANTHROPIC_MODEL, build_prompt, extract_tsv, send_prompt
+from corporate_domain_enrichment import DEFAULT_GPT_MODEL, build_prompt, extract_tsv, send_prompt
+# from corporate_domain_enrichment import DEFAULT_ANTHROPIC_MODEL, build_prompt, extract_tsv, send_prompt  # Commented out
 
 try:
     from .utils import current_timestamp, get_firestore_client
@@ -71,8 +72,9 @@ def _parse_tsv(tsv_text: str) -> List[Dict[str, str]]:
 
 
 def process_message(payload: Dict[str, Any]) -> None:
-    client = get_firestore_client()
     run_id = payload.get("runId")
+    print(f"--- [processor.py] Starting corporate domain enrichment for runId: {run_id} ---")
+    client = get_firestore_client()
     prospect_ids = payload.get("prospectIds") or []
     if not isinstance(prospect_ids, list):
         prospect_ids = []
@@ -122,19 +124,31 @@ def process_message(payload: Dict[str, Any]) -> None:
                 "Keywords": f'site:linkedin.com/in "{org}"',
             }
     else:
-        api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY_WORKSPACE")
+        api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise RuntimeError("ANTHROPIC_API_KEY environment variable is required")
+            raise RuntimeError("OPENAI_API_KEY environment variable is required")
+        # Commented out Anthropic API key handling:
+        # api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY_WORKSPACE")
+        # if not api_key:
+        #     raise RuntimeError("ANTHROPIC_API_KEY environment variable is required")
         prompt = build_prompt(organizations, people_table)
         response_text = send_prompt(
             prompt,
-            os.getenv("ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
-            float(os.getenv("ANTHROPIC_TEMPERATURE", "0.1")),
+            os.getenv("OPENAI_MODEL", DEFAULT_GPT_MODEL),
+            float(os.getenv("OPENAI_TEMPERATURE", "0.1")),
             api_key,
         )
+        # Commented out Anthropic model/temperature:
+        # response_text = send_prompt(
+        #     prompt,
+        #     os.getenv("ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
+        #     float(os.getenv("ANTHROPIC_TEMPERATURE", "0.1")),
+        #     api_key,
+        # )
         tsv = extract_tsv(response_text)
         if not tsv:
-            raise RuntimeError("Failed to extract TSV from Anthropic response")
+            raise RuntimeError("Failed to extract TSV from GPT response")
+            # raise RuntimeError("Failed to extract TSV from Anthropic response")  # Commented out
         for row in _parse_tsv(tsv):
             org_name = row.get("Organization")
             if isinstance(org_name, str) and org_name.strip():
