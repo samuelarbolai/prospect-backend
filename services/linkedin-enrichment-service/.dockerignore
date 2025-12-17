@@ -1,0 +1,60 @@
+# Dependencies (will be installed in container)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Build output (will be built in container)
+dist/
+
+# Environment files (should be passed at runtime)
+.env
+.env.*
+!.env.example
+
+# Documentation (not needed in production)
+*.md
+!package.json
+vibe-coding-sdk/
+examples.md
+QUICKSTART.md
+SERVICE_OVERVIEW.md
+GET_ENDPOINTS_TEST_RESULTS.md
+
+# Test files
+test-*.sh
+*.test.ts
+*.spec.ts
+__tests__/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.editorconfig
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Temporary files
+*.tmp
+*.temp
+logs/
+coverage/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
