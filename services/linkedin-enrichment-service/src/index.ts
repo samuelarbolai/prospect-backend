@@ -75,10 +75,13 @@ async function startServer() {
 
   // Middleware
   app.use(cors({
-    origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || '*',
+    origin: true, // Allow all origins in development
     credentials: true,
   }));
   app.use(express.json({ limit: '10mb' })); // Support large batch requests
+
+  // Serve static files (interface.html)
+  app.use(express.static('.'));
 
   // Request logging middleware
   app.use((req, res, next) => {

@@ -16,6 +16,7 @@ Unlike the Lambda-based enrichment pipeline, this service operates as a standalo
 
 - ✅ **Single prospect enrichment** - Enrich one prospect at a time via POST request
 - ✅ **Batch enrichment** - Enrich multiple prospects in a single request
+- ✅ **Prospect discovery** - Discover new prospects from Google search keywords (up to 100 results per search)
 - ✅ **Configurable keyword generation** - Customize search queries per request
 - ✅ **Custom keyword override** - Provide your own search query
 - ✅ **Keyword testing endpoint** - Preview generated search queries without running enrichment
@@ -284,6 +285,56 @@ Test keyword generation without running enrichment. Useful for debugging and tun
   "keywords": "John Doe works at Acme Corp"
 }
 ```
+
+---
+
+### Discover Prospects
+
+**POST** `/api/discover-prospects`
+
+Discover new prospects by searching Google with custom keywords. Creates new prospect records in Firestore.
+
+**Request Body:**
+```json
+{
+  "keywords": "software engineer San Francisco site:linkedin.com/in",
+  "maxResults": 50,
+  "batchId": "my-custom-batch-id"
+}
+```
+
+**Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `keywords` | string | Yes | Google search query |
+| `maxResults` | number | No | Number of results to fetch (1-100, default: 10) |
+| `batchId` | string | No | Custom batch ID (auto-generated if not provided) |
+
+**Response:**
+```json
+{
+  "success": true,
+  "batchId": "batch_1234567890",
+  "keywords": "software engineer San Francisco site:linkedin.com/in",
+  "prospectsCreated": 48,
+  "prospectsFailed": 2,
+  "totalAttempted": 50,
+  "prospectIds": ["id1", "id2", "..."],
+  "errors": [
+    {
+      "index": 5,
+      "error": "Failed to parse snippet"
+    }
+  ]
+}
+```
+
+**Notes:**
+- Google Custom Search API has a hard limit of **100 results per query**
+- For more prospects, run multiple searches with different keywords
+- Prospects are automatically saved to Firestore with `batch_id` field
+- OpenAI extracts: name, title, organization, location, LinkedIn URL from snippets
 
 ---
 
@@ -733,10 +784,11 @@ curl -X POST http://localhost:4200/api/test-keywords \
 
 ## Performance Considerations
 
-- **Google Custom Search API** - Limited to 100 queries/day on free tier
+- **Google Custom Search API** - Limited to 100 queries/day on free tier, 100 results max per query
 - **OpenAI API** - Rate limits vary by model and tier
 - **Firestore** - Batch operations limited to 500 documents
 - **Batch Enrichment** - Process 10-50 prospects per request for best performance
+- **Prospect Discovery** - Maximum 100 results per search query (Google API constraint)
 
 ## Troubleshooting
 

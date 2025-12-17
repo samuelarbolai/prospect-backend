@@ -142,7 +142,7 @@ export class LinkedInEnrichmentService {
    * Implements automatic retry without quotes if no results are found.
    *
    * @param query - Search query string
-   * @param maxResults - Maximum number of results to return (1-10, default: 3)
+   * @param maxResults - Maximum number of results to return (minimum: 1, default: 3)
    * @returns Array of search results
    * @throws Error if API call fails or configuration is invalid
    */
@@ -150,40 +150,67 @@ export class LinkedInEnrichmentService {
     query: string,
     maxResults: number = 3
   ): Promise<GoogleSearchResult[]> {
-    if (maxResults < 1 || maxResults > 10) {
-      throw new Error('maxResults must be between 1 and 10');
+    if (maxResults < 1) {
+      throw new Error('maxResults must be at least 1');
     }
 
-    const params = {
-      key: this.googleApiKey,
-      cx: this.googleCseId,
-      q: query,
-      num: maxResults,
-    };
+    if (maxResults > 100) {
+      throw new Error('maxResults cannot exceed 100 (Google API limit)');
+    }
+
+    // Google API limit is 10 per request, so we need to paginate
+    const resultsPerPage = 10;
+    const numRequests = Math.ceil(maxResults / resultsPerPage);
+    const allResults: GoogleSearchResult[] = [];
 
     try {
-      // Primary search with original query
-      const response = await axios.get('https://www.googleapis.com/customsearch/v1', {
-        params,
-        timeout: 15000, // 15 second timeout
-      });
+      for (let i = 0; i < numRequests; i++) {
+        const startIndex = i * resultsPerPage + 1;
+        const numToFetch = Math.min(resultsPerPage, maxResults - allResults.length);
 
-      const items = response.data.items || [];
+        const params = {
+          key: this.googleApiKey,
+          cx: this.googleCseId,
+          q: query,
+          num: numToFetch,
+          start: startIndex,
+        };
+
+        const response = await axios.get('https://www.googleapis.com/customsearch/v1', {
+          params,
+          timeout: 15000,
+        });
+
+        const items = response.data.items || [];
+        allResults.push(...items);
+
+        // If we got fewer results than requested, no more pages available
+        if (items.length < numToFetch) {
+          break;
+        }
+      }
 
       // If no results and query has quotes, retry without quotes
-      if (items.length === 0 && query.includes('"')) {
+      if (allResults.length === 0 && query.includes('"')) {
         const fallbackQuery = query.replace(/"/g, '').replace(/\s+/g, ' ').trim();
         console.log(`No results for "${query}", retrying with: ${fallbackQuery}`);
 
+        const params = {
+          key: this.googleApiKey,
+          cx: this.googleCseId,
+          q: fallbackQuery,
+          num: Math.min(maxResults, 10),
+        };
+
         const fallbackResponse = await axios.get('https://www.googleapis.com/customsearch/v1', {
-          params: { ...params, q: fallbackQuery },
+          params,
           timeout: 15000,
         });
 
         return fallbackResponse.data.items || [];
       }
 
-      return items;
+      return allResults;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(`Google API error: ${error.message}`);

@@ -499,11 +499,11 @@ export function createEnrichmentRoutes(
       }
 
       const finalMaxResults = typeof maxResults === 'number' ? maxResults : 10;
-      if (finalMaxResults < 1 || finalMaxResults > 10) {
+      if (finalMaxResults < 1 || finalMaxResults > 100) {
         res.status(400).json({
           success: false,
           error: 'Validation error',
-          message: 'maxResults must be between 1 and 10',
+          message: 'maxResults must be between 1 and 100',
         });
         return;
       }

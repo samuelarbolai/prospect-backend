@@ -101,7 +101,12 @@ export class BatchService {
       updated_at: admin.firestore.Timestamp.now(),
     };
 
-    const prospectRef = await this.db.collection('prospects').add(prospectWithBatch);
+    // Remove undefined values to avoid Firestore validation errors
+    const cleanedData = Object.fromEntries(
+      Object.entries(prospectWithBatch).filter(([_, v]) => v !== undefined)
+    ) as ProspectDocument;
+
+    const prospectRef = await this.db.collection('prospects').add(cleanedData);
 
     console.log(`Created prospect ${prospectRef.id} in batch ${batchId}`);
 

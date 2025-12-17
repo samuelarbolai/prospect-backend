@@ -445,7 +445,10 @@ docker run -p 4200:4200 --env-file .env linkedin-enrichment-service
 - [ ] Add API authentication (JWT, API keys)
 
 ### Known Issues
-- One prospect failed in testing due to undefined `organization` field (Firestore validation)
-  - Solution: Enable `ignoreUndefinedProperties` in Firestore settings or filter undefined values
+- ~~One prospect failed in testing due to undefined `organization` field (Firestore validation)~~ ✅ FIXED
+  - Solution implemented: Filter undefined values before saving to Firestore
+- Google Custom Search API has a hard limit of 100 results per query
+  - This is a Google API constraint, not a service limitation
+  - Users needing more prospects should run multiple searches with different keywords
 - No automated tests yet
 - No rate limiting on endpoints
