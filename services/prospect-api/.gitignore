@@ -13,4 +13,9 @@ lerna-debug.log*
 .env.local
 .env.development.local
 leadgen-475923-29d2eed038e0.json
-leadgen-475923-29d2eed038e0.json                
+leadgen-475923-29d2eed038e0.json
+
+# Docusaurus documentation
+docs-site/build/
+docs-site/.docusaurus/
+docs-site/node_modules/

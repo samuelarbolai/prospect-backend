@@ -1,0 +1,169 @@
+---
+id: intro
+title: Prospect Pipeline API Documentation
+sidebar_label: Introduction
+sidebar_position: 1
+slug: /
+---
+
+# Prospect Pipeline API
+
+Welcome to the **Prospect Pipeline API** documentation! This REST API powers the prospect management and enrichment system for the Prospect Pipeline platform.
+
+## 🚀 What Can This API Do?
+
+- **✅ Query Prospects** - Retrieve and filter prospects with advanced pagination
+- **✅ Queue Enrichment** - Trigger LinkedIn and domain data enrichment workflows
+- **✅ Tag for Outreach** - Mark prospects as ready for outreach campaigns
+- **✅ Pricing Management** - Track enrichment costs and manage user sessions
+- **✅ List Management** - Organize prospects into custom lists
+
+## Quick Start
+
+The service runs on port **4000** by default and exposes RESTful endpoints under `/api`.
+
+### Health Check
+
+```bash
+curl http://localhost:4000/healthz
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "timestamp": 1704067200000
+}
+```
+
+### Query Prospects
+
+```bash
+curl "http://localhost:4000/api/prospects?pageSize=10&statuses=completed"
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "prospect123",
+      "name": "John Doe",
+      "organization": "Acme Corp",
+      "role_title": "CEO",
+      "priority_bucket": "P1",
+      "list_ids": ["enrichment_queue"],
+      "enrichment": {
+        "status": "completed",
+        "linkedin_status": "completed",
+        "domain_status": "completed"
+      }
+    }
+  ],
+  "nextPageToken": "prospect456"
+}
+```
+
+### Queue Enrichment
+
+```bash
+curl -X POST http://localhost:4000/api/enqueue_enrichment \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prospectIds": ["prospect123"],
+    "listId": "my_list",
+    "jobType": "linkedin"
+  }'
+```
+
+**Response:**
+```json
+{
+  "runId": "run_abc123",
+  "queued": 1,
+  "listTag": "enrichment_queue",
+  "listId": "my_list",
+  "jobType": "linkedin"
+}
+```
+
+## Architecture
+
+The Prospect Pipeline API integrates with:
+
+- **Google Cloud Firestore** - Primary data store for prospects and enrichment runs
+- **AWS SQS** - Queue system for distributed enrichment jobs (optional)
+- **Pricing System** - Cost tracking for enrichment operations
+
+### Data Flow
+
+```
+Client Request → Express API → Firestore Database
+                           ↓
+                    SQS Queue (optional)
+                           ↓
+                Enrichment Workers (Lambda/Python)
+```
+
+## Key Features
+
+### Advanced Filtering
+
+Filter prospects by:
+- List membership (up to 10 lists)
+- Priority buckets (P1, P2, P3, etc.)
+- Enrichment status (pending, queued, in_progress, completed, failed)
+- Fuzzy text search on name, organization, or title
+
+### Cursor-Based Pagination
+
+Efficient pagination using document IDs as cursors, supporting datasets of any size.
+
+### Batch Operations
+
+Process multiple prospects in a single request with automatic batching for Firestore writes (up to 400 per batch).
+
+### Pricing Integration
+
+Optional session-based pricing to track costs per user across enrichment operations.
+
+## Technology Stack
+
+- **Runtime:** Node.js 20 with TypeScript
+- **Framework:** Express.js 4.x
+- **Database:** Google Cloud Firestore
+- **Validation:** Zod schema validation
+- **Queue:** AWS SQS (optional)
+
+## API Endpoints
+
+### Health
+- `GET /healthz` - Service health check
+
+### Prospects
+- `GET /api/prospects` - List prospects with filtering
+- `GET /api/list-options` - Get available list IDs
+
+### Enrichment
+- `POST /api/enqueue_enrichment` - Queue prospects for enrichment
+- `POST /api/tag_outreach_ready` - Mark prospects as outreach ready
+
+### Pricing
+- `POST /api/pricing/sessions/start` - Start pricing session
+- `GET /api/pricing/sessions/current/:userId` - Get current session
+- `GET /api/pricing/sessions/total/:sessionId` - Get session total
+- `POST /api/pricing/sessions/reset/:userId` - Reset user session
+- `POST /api/pricing/admin/reset/:userId` - Admin session reset
+- `POST /api/pricing/estimate` - Estimate enrichment cost
+
+## Next Steps
+
+- 📖 [Getting Started Guide](getting-started/setup) - Set up your development environment
+- 🏗️ [Architecture Overview](architecture/overview) - Learn about the system architecture
+- 💰 [Pricing System](guides/pricing) - Understand the pricing model
+- 🔌 [API Reference](/docs/api) - Explore all available endpoints
+
+## Need Help?
+
+- **GitHub Repository:** [samuelarbolai/prospect-backend](https://github.com/samuelarbolai/prospect-backend)
+- **API Playground:** Use the interactive [API Playground](/docs/api) to test endpoints

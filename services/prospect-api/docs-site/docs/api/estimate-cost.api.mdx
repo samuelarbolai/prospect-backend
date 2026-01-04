@@ -1,0 +1,71 @@
+---
+id: estimate-cost
+title: "Estimate enrichment cost"
+description: "Calculate the estimated cost for enriching a set of prospects"
+sidebar_label: "Estimate enrichment cost"
+hide_title: true
+hide_table_of_contents: true
+api: eJy9VlFv4zYM/isCn+4KN0l33W7nt17XGwJ0u1zTbcDSPjAyY6uVJVWS2wZB/vtA2U7ctNjLDfNLYov8RH4iP3EDEcsA+QJmXkllSrjNoKAgvXJRWQM5nKOWjcZIIlYkKERVY6RCSBuiWFkvyHglK2VKgSJQFHYlnLfBkYwBMrCOPDLWtIAcev9zGyJk4OmhoRA/22IN+Sa9Kk8F5NE3lIG0JpKJvITOaSUT0PgucGQbCLKiGvlfXDuCHOzyjmSP2wItoA9mWgTOznmOKCoK7Dhc3OOg97iGDFSkevg9RM8cZVArc0mmjBXkJ9v0Om1NTw7pO2OoISdi+ksQ0e6Y3BEJ2/Rw8MFZE9oAf5hM+OfgTNilB4Dv4OltMs5t04J15spEKsnDYW6/N/WS/OGB0zPWThPkJ5MthxaGUCa5QAYr62uMkMNKW4yvoC9e1pkyorBao3+5Qc/Y6VskXbW1JR5RqyIRIlaoNBX/HWHkvfVv1ccuRPjzcPdcDGpOqCB2tdpn8+Nb2UxNJG9Qi0D+kbxot/4/M3k7gm0fdU2xstzirm1th9wdMEanxq4Vl/GgZFsQlp4NNF5DDlWMLh+PtZWoKxtifjqZTF4VxiUvi4IeSVtXk4ldOLDNhkAhH497no/RqeOfPnyYfPp5cvrp9OPHUROOJZnoUZ+MfGNG6NyrjWbeFo1MB9cl/O5c26YQV415D9vbDJjjq72AXfRMHajKoifzdpuBMiubaFYxkTrrVWGmHGllSJzNppABc9PGcTKajF7TcHUxv2bTpMAszK+BPqO8J1Ok6JWkkfgNDZYU9s2addqdaHxoqFGmzG6MbaInlJWIWJb8SaApRHeGIlDgyMLoxtyYo6MvhLHxFPKjoxtzLL415NfJfqV0JL/fTDypWAmHpTKpRDvrhgYmnMylMvdUTE0CKWyNygzCZK9rLAc+GMQuYE9YrJOJR3m/C5mRlkpr/r+/sVLWu9sptOlck6yM1bZci3lEed+ldfHsPIUwuuvSuF47mqfj4NVfrS01ibY8vihPIVpPaasCIwp+xZLY9OyvuZh/m6e1O7vsWRfvbDpZ1O/Z6m9bJAv/SsJuTNfzKFPPG6y5jLgS5o1z1nPrvWyDUsWqWY6krccB64Y0+qXVqPb9sWwrBbiNuXtrNAPsXoqHtMm2x1/U5GavRd89NHQqFOk5jp1GZWDbpbXphGUB6FSSsXZuyXajBV/yVbp1FrDZLDHQH15vt/z5gasT8sVtBo/oFS65BxfclxVhQT6p0T2t0xWbcjnmk+Z+RN2kyeBQY1l2Wo8zKcnFf7W9Hcjk7Ov8GjJYdqNPbQv28fjE4ws+QQ5peEq1mWYj/rYBjaZssGTbFpOffwAyTXDP
+sidebar_class_name: "post api-method"
+info_path: docs/api/prospect-pipeline-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Estimate enrichment cost"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/pricing/estimate"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Calculate the estimated cost for enriching a set of prospects
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["prospectIds"],"properties":{"prospectIds":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"description":"Array of prospect IDs to estimate cost for"}}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Cost estimate","content":{"application/json":{"schema":{"type":"object","properties":{"prospectCount":{"type":"integer","description":"Number of prospects","example":10},"cost":{"type":"number","format":"float","description":"Estimated cost in dollars","example":1}}}}}},"400":{"description":"Request validation failed","content":{"application/json":{"schema":{"type":"object","properties":{"error":{"type":"string","example":"Validation failed: prospectIds is required"}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"error":{"type":"string","example":"Internal server error"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

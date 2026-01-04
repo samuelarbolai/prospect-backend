@@ -1,0 +1,78 @@
+---
+id: tag-outreach-ready
+title: "Tag prospects as outreach ready"
+description: "Mark prospects as ready for outreach by setting outreach.ready flag and timestamps."
+sidebar_label: "Tag prospects as outreach ready"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVlFv2zYQ/isEX9YGiu202boK2IPbupuBdEltd8OWGMZZPMtMKJIhKSeG4f8+HCXZip21Dxv2NL9Yoo4f7767+44bHiD3PL3mA+1ktixQBz5NuECfOWmDNJqn/BO4O2ad8Raz4Bl45hDEmi2MY6YMDiFbsvmaeQxB6ny31qnNFOQMtGBBFugDFNZ3bvSNPjkZS4FssFgQbHpycqNP2RiDPwT4iQVX4t98nUHYAx/blFZAQHFk1RfCMyV9mEDOgtmF9121OpPCM3AO1jeaJ9xYdEBsDAVPibPLGn9ELvCEO7wv0Yd3Rqx5uomv0qHgKXme8MzoQNSmGw7WKplFsO6tJ3433GdLLICewtoiT7mZ32IWatwK6Jo3Lg6FpxxZR14FiZ42tj/ucWIEPOEyYNFe98FJnfOEF1JfoM7Dkqdn2/g6rEzPDougT1DMLHZMMWGykgqGDT94ojBAzrcJr0n91mkJL+Bx9/aqd3jeZXwARbCEDkK087TP0guBCyhViD5cfpmMBv33v8xGg/6HP2YXw/FkNvzAUK/YCtxLvo0/4tVbo33F3atej/6enn+1q3dfZhl6vyiVWpM3OQr+D1L6NG91fbYMpQ6Yo+OHhPxaFnN07Qx41uz+Ou1PcajgQQh8ns4dQ+fPkTKqypytQEkRA2YLkOrfJASdM+65KPARCqto6bfD01PWKn8mSZ/qtmmi+f65aIY6oKMS8+hW6Fh19H8ZyfMebBuvCwxLQ4pjjY/4QM3Cu2BlN0A+a1Ru5moZqmBI0De8dIqnfBmCTbtdZTJQS+NDet7r9Y5q4oI+M4ErVMbGnq6Q+DZpA/m0222YPgUrT394/br39sfe+dvzN286pT/NUAcH6qzjSt0Ba48OunJGlFlMXR3yi/fKlIKNSv2Sb6cJJ5ZHezUdNFwdSNx1Q+e0VfrN2jbhUi9M5F6GyHTTzuxKWlRSI+tfDXnCia7KtbNOr3PMzGgwnpBpHHZhiewY6B1kd6hFDEhm2GGfQEOOft+nCcPdeGX3JZZS58mN3s1OEhVailPSOpnRFPXoybNmVn5ECKXDZk5+LtGto/1CqoCuJQoPMiyZhVzqWLe1dYktEwrmQuo7FEMdQYQpQOqWm7SLlOLJ2N85HOstmjjI7nYuE9JcKkXPdEQr6t0E9VU4E8yW2iiTr9k4QHZXhzV4tA6979zWYUzWFscxHfT1Z2NyhayqmI/SoQ/GYTxKQABGr5DHm0L/9zEbfx7Hb7dm3rDOXph6rrwkqz+NiBbuSNfi2CchgCwKgYaCyogqYVxaaxz149POyGVYlvNOZoquh6JEBW5uFMh9y8yrSuHU29TSBegW9jfoPizNzV6n/r+hNRob8DF0rQKpSQRifja1bF5zsJIsj4VzmnDSRrLZbObg8YtT2y0t31Ob8fR6mvAVOAlzEpPr6TbhSwSBLirtHa55yt9X2TilkiVhAVXGK9jhBCFJrXb0swxt+KrttDUEri7HE57weX3HLIygPQ4e6J4IDzzl8aYamyxeQmltwxXovIScbCtM+v0FGv882A==
+sidebar_class_name: "post api-method"
+info_path: docs/api/prospect-pipeline-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Tag prospects as outreach ready"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/tag_outreach_ready"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Mark prospects as ready for outreach by setting outreach.ready flag and timestamps.
+
+**Side Effects:**
+- Sets outreach.ready = true
+- Sets outreach.ready_at timestamp
+- Sets outreach.updated_at timestamp
+- Adds listTag to prospect's list_ids array
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["prospectIds"],"properties":{"prospectIds":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"description":"Array of prospect document IDs to tag"},"listTag":{"type":"string","minLength":1,"maxLength":120,"description":"Optional tag to add to prospect list_ids (defaults to OUTREACH_READY_LIST_ID env var)"}}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Prospects successfully tagged","content":{"application/json":{"schema":{"type":"object","properties":{"updated":{"type":"integer","description":"Number of prospects updated"},"listTag":{"type":"string","description":"Tag added to prospect list_ids"}}}}}},"400":{"description":"Request validation failed","content":{"application/json":{"schema":{"type":"object","properties":{"error":{"type":"string","example":"Validation failed: prospectIds is required"}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"error":{"type":"string","example":"Internal server error"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

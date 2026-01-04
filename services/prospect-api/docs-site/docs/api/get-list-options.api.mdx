@@ -1,0 +1,63 @@
+---
+id: get-list-options
+title: "Get list options"
+description: "Retrieve distinct list IDs from the first 500 prospects for UI filtering"
+sidebar_label: "Get list options"
+hide_title: true
+hide_table_of_contents: true
+api: eJytVF1vGzcQ/CvEPiXGWVIap2nuLW0dQ4CLOpaDALEFY8Vb3dHikTS5p1oQ9N+LpU4fttu36EV3x+VyZjkza2CsE5S3cBV9CqQ5wbSAipKOJrDxDkq4Jo6GlqQqk9g4zcqaxGr8Z1Lz6FvFDam5iYnVh9FIhV0jNfdRfRurubFM0bgaCvCBIkrbcQUl1MSXJvHf+aAEBURKwbtECco1/DIayd9zLFKv/Pw1FChAe8fkWDZhCNbofNLwIcnONSTdUIvyxKtAUIKfPZBmKCBEwcVme67v4RwKMUZcQQGGqT3+njjT2hRAT9gGSzJIctHopiXH948ddSSsO46EurmPhNUqH2h8NLy6F/Qw3eRfAR/+i/HYMUWHViWKS4qKYvTx57HdtnvF6YjS/yDY7FC3xI3vr1PaIzdQwhCDGQq9U7+/3u1+kdsaumihhIY5lMOh9Rpt4xOXZ6PRCF4K8FKWVUVLsj7IZHsksCmOG6VyONyp7xSDOf31/fvRp99GZ5/OPn4cdOlUk+OI9t0gdm6AIbw66Cr6qtPysuP65g/ru0pdd+4tbKYFGDf3eVqG82x2tlFXJpA1jtTnqzEUIDy3Pd8NRoPXlK7PJzdSmk0iBnrd6HfUC3JVRmI0DdRf6LCmdHBYoQ5iUyI24+rizu3kphjrWj4pdJUK0WjjapUoCbI0uHN37uTkCyF3kVJ5cnLnTtXXjuIq129te2Tnfww3KmBtXFZaX93RC8dfGregauxyk8q3aNwRTNl1g/XRHkxqDzj7I5dE1Is9ZOk0M9bKsxxxxHofKGlL54Z047z19UpNGPWip3X+FCKlNHjoadysAk3ydcjqhfe1JbW96i8mUmIfKR9VIaOSV6xJSj9/n6jJ10lee/Cz3dTVm63K0b6Vqh++yhWRHjtKrJZoTdVPrbcu6mxdh63ISJQw6ULwUSz0XNK14aabDbRvhwnbjizGmbdoDlqfbZUC4sbgE7fojnpfUJ+SByM+0+L6ECU/M+r7PGF64mGwaJzkZGa27jPiFjAYKOBZSkwLkCCQ1fV6hom+RbvZyOdHkSaUt9MClhgNznLeTjcFNIQVxRwrC1rJOLWmIJNcou1ygr9MSPHyPrguzm9gs/kXHFB6xw==
+sidebar_class_name: "get api-method"
+info_path: docs/api/prospect-pipeline-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get list options"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/list-options"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve distinct list IDs from the first 500 prospects for UI filtering
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"List of distinct list IDs","content":{"application/json":{"schema":{"type":"object","properties":{"options":{"type":"array","items":{"type":"string"},"example":["enrichment_queue","outreach_ready","priority_list"]}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"error":{"type":"string","example":"Internal server error"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

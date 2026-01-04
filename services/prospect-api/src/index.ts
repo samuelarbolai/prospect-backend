@@ -22,6 +22,25 @@ const corsOptions: CorsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Serve documentation at /docs
+app.use('/docs', express.static('docs-site/build'));
+
+app.get("/", (_req, res) => {
+  res.json({
+    name: "Prospect Pipeline API",
+    version: "1.0.0",
+    documentation: "Visit /docs for complete API documentation",
+    endpoints: {
+      health: "GET /healthz",
+      prospects: "GET /api/prospects",
+      listOptions: "GET /api/list-options",
+      enqueueEnrichment: "POST /api/enqueue_enrichment",
+      tagOutreachReady: "POST /api/tag_outreach_ready",
+      pricing: "See /docs/api for pricing endpoints"
+    }
+  });
+});
+
 app.get("/healthz", (_req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
@@ -59,4 +78,9 @@ if (isNaN(port)) {
 
 app.listen(port, () => {
   console.log(`[Startup] Prospect pipeline backend successfully listening on port ${port}`);
+  console.log('');
+  console.log('📖 Documentation:');
+  console.log(`   http://localhost:${port}/docs - Full API Documentation`);
+  console.log(`   http://localhost:${port}/ - API Info`);
+  console.log('');
 });
