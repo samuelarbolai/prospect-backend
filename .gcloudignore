@@ -1,0 +1,44 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore
+
+.gcloudignore
+.git
+.gitignore
+
+# Exclude node_modules but keep package-lock.json files
+node_modules/
+**/node_modules/
+
+# Exclude documentation build outputs
+**/docs-site/build/
+**/docs-site/.docusaurus/
+
+# Exclude environment files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Exclude logs and temp files
+*.log
+.DS_Store
+*.swp
+*.swo
+
+# Exclude Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Exclude test and coverage
+coverage/
+.nyc_output/
+*.test.js
+
+# Exclude IDE files
+.vscode/
+.idea/
+*.sublime-*

@@ -3,12 +3,12 @@ ARG CACHE_BUST=2
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# Copy package files from the service directory
+COPY services/prospect-api/package.json services/prospect-api/package-lock.json ./
 RUN npm ci --no-cache
 
-# Copy all source files
-# Note: You only need to copy 'src' and any other necessary files now.
-COPY . .
+# Copy all source files from the service directory
+COPY services/prospect-api/ .
 
 # Build the application
 # Assuming your package.json has a 'build' script

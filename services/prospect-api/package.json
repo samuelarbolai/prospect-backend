@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json && npm run build:docs",
+    "build": "tsc -p tsconfig.json",
+    "build:with-docs": "tsc -p tsconfig.json && npm run build:docs",
     "build:docs": "cd docs-site && npm run build",
     "start": "node dist/index.js",
     "test": "echo \"No tests yet\" && exit 0",
