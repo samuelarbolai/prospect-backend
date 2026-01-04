@@ -21,26 +21,7 @@ const config: Config = {
     locales: ['en'],
   },
 
-  plugins: [
-    [
-      'docusaurus-plugin-openapi-docs',
-      {
-        id: 'api',
-        docsPluginId: 'classic',
-        config: {
-          prospect: {
-            specPath: '../openapi.yaml',
-            outputDir: 'docs/api',
-            sidebarOptions: {
-              groupPathsBy: 'tag',
-            },
-          },
-        },
-      },
-    ],
-  ],
-
-  themes: ['docusaurus-theme-openapi-docs'],
+  plugins: [],
 
   presets: [
     [
@@ -76,14 +57,8 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          type: 'docSidebar',
-          sidebarId: 'apiSidebar',
-          position: 'left',
+          to: '/api.html',
           label: 'API Reference',
-        },
-        {
-          to: '/docs/api',
-          label: 'API Playground',
           position: 'left',
         },
         {
@@ -105,7 +80,7 @@ const config: Config = {
             },
             {
               label: 'API Reference',
-              to: '/docs/api',
+              to: '/api.html',
             },
           ],
         },

@@ -1,0 +1,664 @@
+openapi: 3.0.0
+info:
+  title: Prospect Pipeline API
+  version: 1.0.0
+  description: |
+    REST API for the Prospect Pipeline Backend service. Manages prospects, enrichment queuing,
+    outreach tagging, and pricing sessions.
+
+    **Features:**
+    - Query and filter prospects with pagination
+    - Queue prospects for LinkedIn and domain enrichment
+    - Tag prospects as outreach ready
+    - Track pricing and billing for enrichment operations
+
+    **Technology Stack:**
+    - Express.js with TypeScript
+    - Google Cloud Firestore for data storage
+    - AWS SQS for job queuing (optional)
+    - Zod for request validation
+
+  contact:
+    name: API Support
+    url: https://github.com/samuelarbolai/prospect-backend
+
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+  - url: https://prospect-api-633098049477.us-central1.run.app
+    description: Production server (Cloud Run)
+
+tags:
+  - name: Health
+    description: Service health and status endpoints
+  - name: Prospects
+    description: Prospect data queries and retrieval
+  - name: Enrichment
+    description: Enrichment queuing and outreach tagging
+  - name: Pricing
+    description: Pricing session management and cost estimation
+
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Check if the service is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: number
+                    description: Unix timestamp in milliseconds
+                    example: 1704067200000
+
+  /api/prospects:
+    get:
+      tags: [Prospects]
+      summary: List prospects
+      description: |
+        Query and paginate through prospects with optional filtering by list IDs, priorities,
+        enrichment statuses, and fuzzy search on name, organization, or title.
+
+        **Pagination:** Uses cursor-based pagination with document IDs as tokens.
+
+        **Filtering:** All filters are applied in-memory after Firestore query.
+      operationId: listProspects
+      parameters:
+        - name: pageSize
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: pageToken
+          in: query
+          description: Cursor token from previous response for pagination
+          schema:
+            type: string
+        - name: listIds
+          in: query
+          description: Comma-separated list IDs to filter by (max 10)
+          schema:
+            type: string
+            example: "enrichment_queue,outreach_ready"
+        - name: priorities
+          in: query
+          description: Comma-separated priority buckets to filter by
+          schema:
+            type: string
+            example: "P1,P2"
+        - name: statuses
+          in: query
+          description: Comma-separated enrichment statuses to filter by
+          schema:
+            type: string
+            enum: [pending, queued, in_progress, completed, failed]
+            example: "queued,in_progress"
+        - name: search
+          in: query
+          description: Fuzzy search on name, organization, or role_title
+          schema:
+            type: string
+            example: "John Doe"
+      responses:
+        '200':
+          description: List of prospects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Prospect'
+                  nextPageToken:
+                    type: string
+                    description: Token for next page (omitted if no more pages)
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/list-options:
+    get:
+      tags: [Prospects]
+      summary: Get list options
+      description: Retrieve distinct list IDs from the first 500 prospects for UI filtering
+      operationId: getListOptions
+      responses:
+        '200':
+          description: List of distinct list IDs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  options:
+                    type: array
+                    items:
+                      type: string
+                    example: ["enrichment_queue", "outreach_ready", "priority_list"]
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/enqueue_enrichment:
+    post:
+      tags: [Enrichment]
+      summary: Enqueue prospects for enrichment
+      description: |
+        Queue prospects for LinkedIn or domain enrichment. Creates an enrichment run,
+        updates prospect statuses, and optionally publishes to SQS queue.
+
+        **Side Effects:**
+        - Creates document in `enrichment_runs` collection
+        - Updates each prospect's enrichment status and timestamps
+        - Adds listTag to prospect's list_ids array
+        - Publishes message to SQS (if queue URL configured)
+        - Records pricing transaction (if sessionId provided)
+        - Triggers local enrichment scripts (if LOCAL_ENRICHMENT=1)
+      operationId: enqueueEnrichment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prospectIds, listId]
+              properties:
+                prospectIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                  minItems: 1
+                  description: Array of prospect document IDs to enqueue
+                listId:
+                  type: string
+                  minLength: 1
+                  description: List ID that prospects must belong to
+                listTag:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                  description: Optional tag to add to prospect list_ids
+                metadata:
+                  type: object
+                  description: Optional metadata to attach to the enrichment run
+                  additionalProperties: true
+                jobType:
+                  type: string
+                  enum: [linkedin, domain]
+                  default: linkedin
+                  description: Type of enrichment job
+                sessionId:
+                  type: string
+                  description: Pricing session ID for cost tracking
+      responses:
+        '200':
+          description: Enrichment successfully queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  runId:
+                    type: string
+                    description: ID of the created enrichment run
+                  queued:
+                    type: integer
+                    description: Number of prospects queued
+                  listTag:
+                    type: string
+                    description: Tag added to prospect list_ids
+                  listId:
+                    type: string
+                    description: List ID used for filtering
+                  jobType:
+                    type: string
+                    enum: [linkedin, domain]
+        '400':
+          description: Validation error or prospects not in specified list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "All prospects must be part of the list: enrichment_queue"
+        '404':
+          description: One or more prospects do not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Prospect not found"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/tag_outreach_ready:
+    post:
+      tags: [Enrichment]
+      summary: Tag prospects as outreach ready
+      description: |
+        Mark prospects as ready for outreach by setting outreach.ready flag and timestamps.
+
+        **Side Effects:**
+        - Sets outreach.ready = true
+        - Sets outreach.ready_at timestamp
+        - Sets outreach.updated_at timestamp
+        - Adds listTag to prospect's list_ids array
+      operationId: tagOutreachReady
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prospectIds]
+              properties:
+                prospectIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                  minItems: 1
+                  description: Array of prospect document IDs to tag
+                listTag:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+                  description: Optional tag to add to prospect list_ids (defaults to OUTREACH_READY_LIST_ID env var)
+      responses:
+        '200':
+          description: Prospects successfully tagged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: integer
+                    description: Number of prospects updated
+                  listTag:
+                    type: string
+                    description: Tag added to prospect list_ids
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/pricing/sessions/start:
+    post:
+      tags: [Pricing]
+      summary: Start pricing session
+      description: Create a new pricing session for tracking enrichment costs for a user
+      operationId: startPricingSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  minLength: 1
+                  description: User identifier
+      responses:
+        '200':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingSession'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/pricing/sessions/current/{userId}:
+    get:
+      tags: [Pricing]
+      summary: Get current pricing session
+      description: Retrieve the active pricing session for a user
+      operationId: getCurrentSession
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current session (null if no active session)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    oneOf:
+                      - $ref: '#/components/schemas/PricingSession'
+                      - type: "null"
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/pricing/sessions/total/{sessionId}:
+    get:
+      tags: [Pricing]
+      summary: Get session total
+      description: Get the current total cost for a specific pricing session
+      operationId: getSessionTotal
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session total cost
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: number
+                    format: float
+                    description: Total cost in dollars
+                    example: 42.50
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/pricing/sessions/reset/{userId}:
+    post:
+      tags: [Pricing]
+      summary: Reset pricing session
+      description: Reset user's pricing session and move total to billing
+      operationId: resetPricingSession
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/pricing/admin/reset/{userId}:
+    post:
+      tags: [Pricing]
+      summary: Admin reset pricing session
+      description: Admin endpoint to manually reset a user's pricing session
+      operationId: adminResetSession
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/pricing/estimate:
+    post:
+      tags: [Pricing]
+      summary: Estimate enrichment cost
+      description: Calculate the estimated cost for enriching a set of prospects
+      operationId: estimateCost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prospectIds]
+              properties:
+                prospectIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                  minItems: 1
+                  description: Array of prospect IDs to estimate cost for
+      responses:
+        '200':
+          description: Cost estimate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prospectCount:
+                    type: integer
+                    description: Number of prospects
+                    example: 10
+                  cost:
+                    type: number
+                    format: float
+                    description: Estimated cost in dollars
+                    example: 1.00
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    Prospect:
+      type: object
+      description: Prospect document from Firestore
+      properties:
+        id:
+          type: string
+          description: Firestore document ID
+        name:
+          type: string
+          description: Prospect full name
+        organization:
+          type: string
+          description: Organization or company name
+        role_title:
+          type: string
+          description: Job title or role
+        priority_bucket:
+          type: string
+          description: Priority classification (e.g., P1, P2, P3)
+        list_ids:
+          type: array
+          items:
+            type: string
+          description: List membership IDs
+        batch_id:
+          type: string
+          description: Batch membership ID
+        enrichment:
+          $ref: '#/components/schemas/EnrichmentStatus'
+        outreach:
+          $ref: '#/components/schemas/OutreachStatus'
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    EnrichmentStatus:
+      type: object
+      description: Enrichment status and metadata for a prospect
+      properties:
+        status:
+          type: string
+          enum: [pending, queued, in_progress, completed, failed]
+          description: Overall enrichment status
+        linkedin_status:
+          type: string
+          enum: [pending, queued, in_progress, completed, failed]
+          description: LinkedIn enrichment status
+        domain_status:
+          type: string
+          enum: [pending, queued, in_progress, completed, failed]
+          description: Domain enrichment status
+        linkedin_run_id:
+          type: string
+          description: Reference to LinkedIn enrichment run
+        domain_run_id:
+          type: string
+          description: Reference to domain enrichment run
+        linkedin_queue_timestamp:
+          type: string
+          format: date-time
+          description: When queued for LinkedIn enrichment
+        domain_queue_timestamp:
+          type: string
+          format: date-time
+          description: When queued for domain enrichment
+        linkedin_updated_at:
+          type: string
+          format: date-time
+          description: Last LinkedIn enrichment update
+        domain_updated_at:
+          type: string
+          format: date-time
+          description: Last domain enrichment update
+
+    OutreachStatus:
+      type: object
+      description: Outreach readiness status for a prospect
+      properties:
+        ready:
+          type: boolean
+          description: Whether prospect is ready for outreach
+        ready_at:
+          type: string
+          format: date-time
+          description: When marked as ready for outreach
+        updated_at:
+          type: string
+          format: date-time
+          description: Last outreach status update
+
+    PricingSession:
+      type: object
+      description: Pricing session for tracking enrichment costs
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Unique session identifier
+        user_id:
+          type: string
+          description: User identifier
+        start_time:
+          type: string
+          format: date-time
+          description: Session start time
+        current_total:
+          type: number
+          format: float
+          description: Current accumulated cost
+          example: 0.00
+        status:
+          type: string
+          enum: [active, completed]
+          description: Session status
+
+    EnrichmentRun:
+      type: object
+      description: Enrichment run tracking document
+      properties:
+        id:
+          type: string
+          description: Firestore document ID
+        created_at:
+          type: string
+          format: date-time
+          description: Run creation time
+        status:
+          type: string
+          enum: [queued, in_progress, completed, failed]
+          description: Run status
+        prospect_count:
+          type: integer
+          description: Number of prospects in run
+        list_tag:
+          type: string
+          description: Associated list tag
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Optional metadata
+        job_type:
+          type: string
+          enum: [linkedin, domain]
+          description: Type of enrichment job
+
+  responses:
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Validation failed: prospectIds is required"
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Internal server error"
