@@ -83,6 +83,9 @@ async function startServer() {
   // Serve static files (interface.html)
   app.use(express.static('.'));
 
+  // Serve documentation at /docs
+  app.use('/docs', express.static('docs-site/build'));
+
   // Request logging middleware
   app.use((req, res, next) => {
     const start = Date.now();
@@ -116,7 +119,7 @@ async function startServer() {
         discoverProspects: 'POST /api/discover-prospects',
         testKeywords: 'POST /api/test-keywords',
       },
-      documentation: 'See README.md for detailed API documentation',
+      documentation: 'Visit /docs for complete API documentation',
     });
   });
 
@@ -162,6 +165,10 @@ async function startServer() {
     console.log(`   GET  http://${HOST}:${PORT}/api/batches`);
     console.log(`   GET  http://${HOST}:${PORT}/api/batches/:id`);
     console.log(`   GET  http://${HOST}:${PORT}/api/batches/:id/prospects`);
+    console.log('');
+    console.log('📖 Documentation:');
+    console.log(`   http://${HOST}:${PORT}/docs - Full API Documentation`);
+    console.log(`   http://${HOST}:${PORT}/ - API Testing Interface`);
     console.log('');
   });
 }

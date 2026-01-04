@@ -1,0 +1,71 @@
+---
+id: get-batch
+title: "Get batch by ID"
+description: "Retrieve a single batch by ID"
+sidebar_label: "Get batch by ID"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNVlFv4zYM/isC7+UOcJNu6F781nW9IsDtVrTbU1sEiszY6tmSjqJ6DQL/94Gyk0sb34q9DMtL4pD+yE8kP2oLrOsI5R38qtk0GOGhgAqjIRvYegcl3CCTxSdUWkXr6hbVSlzVaqMWv0EBPiBp8V1UUEKNnJGggKBJd8hIgr8FpzuEEmwFBVgBDprFjfBrsoQVlEwJX0fPYEOgaBrsNJRb4E0QqMhkXQ19/yAoMXgXMYr959NT+ZpCWvvkJAPjHaNjcdMhtNZkCvPHKL7b41h+9YiGhRUJYbZDpJiMwRgPHFfet6gd9AXkc5rCmEqsstH4J6SNIjSeqqNQtpqgPgZZ/sD4BTffPFVx0tjp5yVhTC0f2q1jrJHEIZCPAQ3HpSHUjNVbbmtt2x95sWfdLjUzduFNqKV9kbMm0htpG8ZuiktfQGTNacJWALrUSYNbtwzka5JySf270KIkUsCY9kNfwEh0qXkKau2pEwtUmvGEbYeS9B7qX7wlB2K5xV35oc+fAs5Oz45b9wajT2RQOc//XQcXgM9aqEG51m3EvgAk8jR5yDtP+LxPUVoMY9Q1TpVsoPvL1KQuHCM53aqI9ISkhqj/W8bT6b7NPntw40fZzIrJDZQw18HOV4Mez7e26kX8MvagpIlaKKFhDuV83nqj28ZHLs9E9l6LyycxqwqfsPWhQ8djltAXh0CxnM83PtGJWK3BGSU30yEc4V2Tr5KRhx3d9xetT5W6Se4DiBJbt/aZ8tjfn6z7gtXCqUtH1jQ5h9shijq/XkABQmxA/2l2OjvmcPkcZGpnj1F11pAfc1RrTwozqHW12mmHqjRr9c1yo/ahA/m1bTGqJCtMXXkve+wiRfadukVNplHaVeqPgO58ofBJtyk31+ze3bt379RH1JwI4707UbfDFhT/YRPuI+Oeofhd7xPaS/uafLeLHnNYcbzwbm3rRHrVoholW9Xoxr0qLp+90okbdDx2vdqtTbF+tISRPaHKWrp7bRwZbfLIjPv3/HqhblMInqTjXnZAbblJq5nx3dAMnup5m8/QupPv5HZNIj3eWoMu4kGA3xd/Zn0LPnKn3YHlCvnV3eFFnbffB/zNS8c4T4zPPA+ttnnfZjLbcYruQAcL435EkfzSVnK7kVkR83a70hH/orbv5e+vCWkD5d1DAU+arNQiD1tlo/yuRkn4h5zf34wl+aAObi2Tme72mpOtJs0mT5D39XBF6mUZNagrpJzFYDg3BgMfvHIkgzKAe1G5upRK/A2sf284
+sidebar_class_name: "get api-method"
+info_path: api/linkedin-enrichment-service-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get batch by ID"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/batches/{id}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve a single batch by ID
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"id","in":"path","required":true,"description":"Batch ID","schema":{"type":"string"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Batch found","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean"},"batch":{"type":"object","description":"Batch discovery record","properties":{"id":{"type":"string"},"batch_id":{"type":"string"},"keywords":{"type":"string"},"max_results":{"type":"integer"},"prospects_created":{"type":"integer"},"prospects_failed":{"type":"integer"},"total_attempted":{"type":"integer"},"prospect_ids":{"type":"array","items":{"type":"string"}},"status":{"type":"string","enum":["in_progress","completed","failed"]},"created_at":{"type":"string","format":"date-time"},"completed_at":{"type":"string","format":"date-time"}},"title":"Batch"}}}}}},"404":{"description":"Resource not found","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Not found"},"message":{"type":"string"}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Internal server error"},"message":{"type":"string"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

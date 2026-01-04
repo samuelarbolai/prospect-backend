@@ -1,0 +1,71 @@
+---
+id: list-batches
+title: "List batches"
+description: "Retrieve batches with optional filtering"
+sidebar_label: "List batches"
+hide_title: true
+hide_table_of_contents: true
+api: eJy9Vk1vIzcM/SsC99ICEztbtJe5ZYNkYSDbBpv2lASGrKFnlGgkLUVlYxj+7wXnw05iJ5tFgfpi2HziI6lHUmtgXScor+GTZtNggtsCKkyGbGQbPJTwFZksPqBa9Aj13XKjQmfWTi2tYyTrayggRCQt/88qKMHZxKPXAqIm3SIjCdsavG6xw7SWoQArTN8y0gpe8n/Rj7bNrfK5XSCpsNwGwkERciYPBSTTYKuhXAOvoni2nrFG6twtdXYM5cfj482m2HIn1pzT2+TnXXZqsepJ1fbMHl/ioQjocysFtX4eKdSESfAmtNEhYwUFLLV1WMHtZnNbAGGKwSdM4uu342P5eh7DhU38JO3OmWf0LFAdo7OmK/r0Lgl+vR9bWNyhkTJHkiti27OlbIxEtwMuQnCoPWyEI/cML+q5KWAMZGfURFqKZxnbdIj4eUadKlRlkwkPSCtFaAJVe/HZar++I/38FeM9rr4HqtJBY6sf54QpO06HM4sUUkTDaW4ItdzWD2DDVR5EcWDt5poZ2/hDV3NbvaegYy6bYpTvf1NgAUOic82HXC0DtWKBSjMesW2x18bg6idOSUEsOxyvHzb9p4A/Dol+5hlJ5ktCekBSSBTo/5B+AfioJT0ol9ol3BTQcx8q9Ih8JVyRHKakazx0hUP6LXITZF7W2MWpuYESpjra6a7je7f96MzkoISGOZbTqQtGuyYkLn+X4fGy0y7ErCp8QBdii56HAEHm4M5RKqfTVch0JFZrcELZT3SMe/4uKVTZyI8x019OXciV+pr9ryDzzPpl6LIdLvvC+nusZl6debKm6WK46lnUyeUMCpDEeu8fJ8eT/RzOHqNIeHKXVGsNhSFGtQyksHNqfa3GRlKVZt3vqC11pLC0DpPKSaCfQ6gdqtOcOLTqCjWZRmlfqb8i+pOZwgftcqeryY2/8R8+qHPUnAnTjT9SV9bLacH3O2HLjNsMBXe5DWg755YU2pE9dbQCPA1+aetMeuFQDfNL1eiHXSqQP4PSmRv0PAheEX7LlrAS67klTBwIVTdYxmNDt2jTdcuw9E4uZ+oqxxhIxPZcAbXlJi8mJrS9GALVU9fV0PqjXXKjSETezhr0CZ8QfJn93TV7DIlb7Z9Yuj22k/SzS17vGvtnHhxDSzE+8jQ6bbvN1SW1HhrpGnS0sNtZtwVIt4hhvV7ohP+Q22zk7/4BIA1W2SR3UQ0T4I1Q3/c2ORjlPa6evH9EcYLp+vL9/K8+T96g3GJ2nLfyg6yQQnktW6FBXSF11ehPnRiD8Wmke9NXvGxn2eczUcG//zGfpw==
+sidebar_class_name: "get api-method"
+info_path: api/linkedin-enrichment-service-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List batches"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/batches"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve batches with optional filtering
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"limit","in":"query","description":"Maximum number of batches to return","schema":{"type":"integer","default":100}},{"name":"status","in":"query","description":"Filter by batch status","schema":{"type":"string","enum":["in_progress","completed","failed"]}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"List of batches","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean"},"count":{"type":"integer"},"batches":{"type":"array","items":{"type":"object","description":"Batch discovery record","properties":{"id":{"type":"string"},"batch_id":{"type":"string"},"keywords":{"type":"string"},"max_results":{"type":"integer"},"prospects_created":{"type":"integer"},"prospects_failed":{"type":"integer"},"total_attempted":{"type":"integer"},"prospect_ids":{"type":"array","items":{"type":"string"}},"status":{"type":"string","enum":["in_progress","completed","failed"]},"created_at":{"type":"string","format":"date-time"},"completed_at":{"type":"string","format":"date-time"}},"title":"Batch"}}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Internal server error"},"message":{"type":"string"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

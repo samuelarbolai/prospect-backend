@@ -1,0 +1,71 @@
+---
+id: list-prospects
+title: "List prospects"
+description: "Retrieve prospects with optional filtering"
+sidebar_label: "List prospects"
+hide_title: true
+hide_table_of_contents: true
+api: eJy9VlFv4zYM/isC72UD3KQ3bC9+K7r2EKC3Ha7bU1sUiszYam1JpaRes8D//UDZcZzWTXsbsKc2JsXvo/iR1AaCLD3kV/CFrHeogoebDAr0irQL2hrI4SsG0viIwm19xDcdKmGTg6zFStcBSZsSMrAOSfL3RQE51NqHXeQMnCTZYEBizA0Y2WDyanSADDSjPUSkNTzn8Fk+6SY2wsRmiSTsakQmWEEYIhnIwKsKGwn5BsLacWxtApZIKeBKxjpA/vH4OIOmC5h+HbdtNpDxQYboD7M5TwmL5VqgIa2qBk0Qw8EXHHzoLwcNI16BQ1N0Xx4iRiwgA2UbV2NI/6+krrGAmzGtpQyqutXFe4klf7H4/QCftr3JgNA7azx6tv9yfMx/9mNeaB/2LjyxNQFNYGfpXK1VKvn8zvOJzUtEu7xDxSV2xAIJusPzUSn0fuS4tLZGaaBljNghPKtkm6L0VHZmSST5QnTAxk9B72e1VaUorIqpfiuyjTjXhD5YwhdcdTFxg1lfngmDpVIa/Y/s8CYcgg719NHaqtePeau0rN++21qbeyy0edvTkW4krafROlEf0HKhvbKPSEm5XTs8E3HbtltLg3slfU0Wb4K+t4Gy4RpuXws69omukAGLWxmmwFeWGrYAOx0F3SCk1IbWnIqtCH8wZAb/gsYgp0HY0Lb91f821dULE5B4eHukRySBRJb+j87OAJ8klwrylaw9sjYS9lS5t56v0G0zaNB7WU710Tb9BkNleRmVmHjKUEEOc+n0fDzSusDdXopUQw5VCC6fz7kb68r6kP/K8/H5ILlgsyjwEWvrukWQIgEP710gn8/naxvpiK1a4YyimUnnpgZTERX/2Ob602ltYyG+RvMz8MjWZmVTvn3FL5J8F0ac7ZbRZYciTr4sIANOrIv+cXY8e5nD2ZMj9H5250WjFdmeo1hZ6jecNuWwAEQhg+yeAAO0I7vSNXoRPbt+srasUZxGH2wjLlGSqoQ0hfjToTlZCHyUdUzKml2ba/PhgzhHGSKhvzZH4lIbPs3+3RobkHdThP12M7yfQetuiPfoPsGy46k1K11GkssaxT2uv1kqRImmf6qwyx9WyBgqNKGXvCB8iJqwYOuwFkTaQttjfb9Ilfql39QnXxbiMjpnieW2r4BShyouZ8o2nRgslfPt9DnaJbcVSTecFBqPI4DPi79SxzvrQyPNyJJW9VjUe2Xe7Jr7x950fWMFfApzV0ud1nNKbNO30xVIp2G8mG8y4J5h02azlB7/prpt+XP3cuE2K7TnihT9JDhA973Pv0mm97gePTJZeeyT+vP9DA4/+Q7gDj7/GXj0pDuAN3oo7hBv+AdphoT8ivdihbJASmXozp0ohW58QS/GP0cZhumnMxbhd/wPRyM=
+sidebar_class_name: "get api-method"
+info_path: api/linkedin-enrichment-service-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List prospects"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/prospects"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve prospects with optional filtering
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"limit","in":"query","description":"Maximum number of prospects to return","schema":{"type":"integer","default":100,"maximum":1000}},{"name":"status","in":"query","description":"Filter by enrichment status","schema":{"type":"string","enum":["pending","queued","completed","failed"]}},{"name":"batch_id","in":"query","description":"Filter by batch ID","schema":{"type":"string"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"List of prospects","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean"},"count":{"type":"integer"},"prospects":{"type":"array","items":{"type":"object","description":"Prospect document from Firestore","properties":{"id":{"type":"string"},"name":{"type":"string"},"organization":{"type":"string"},"title":{"type":"string"},"location":{"type":"string"},"social":{"type":"object","properties":{"linkedin":{"type":"object","properties":{"primary":{"type":"string"},"status":{"type":"string","enum":["discovered","enriched","failed"]}}}}},"enrichment":{"type":"object","properties":{"status":{"type":"string","enum":["pending","queued","completed","failed"]},"linkedin_status":{"type":"string"},"linkedin_updated_at":{"type":"string","format":"date-time"}}},"batch_id":{"type":"string"},"created_at":{"type":"string","format":"date-time"},"updated_at":{"type":"string","format":"date-time"}},"title":"Prospect"}}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Internal server error"},"message":{"type":"string"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

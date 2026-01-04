@@ -107,3 +107,8 @@ test-results/
 # Verification scripts output
 verify-*.ts
 verify-*.js
+
+# Docusaurus documentation
+docs-site/build/
+docs-site/.docusaurus/
+docs-site/node_modules/

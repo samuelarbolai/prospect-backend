@@ -1,0 +1,73 @@
+---
+id: discover-prospects
+title: "Discover new prospects"
+description: "Search Google for prospects matching keywords and parse results with OpenAI."
+sidebar_label: "Discover new prospects"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNVm1v20YM/isH9ksCKLaTtfWqb6mTrB7aJojTDVhiDGeJti453V15J7/A8H8feJIdOQkaYAOG+oslHckj+ZAPuYYgZx7SWzhTPrNzpBWME8jRZ6RcUNZACiOUlBXiN2tnGsXUknBkvcMseFHKkBXKzMQDrhaWci+kyYWT5FEQ+koHLxYqFOLSoTkddu7MF7lUZVWK415vJ+GQhK9vOWiuOb0aCq1KFSR7cdi5M5CAdUjxfZhDCnnj8tXWG0iA8HuFPny0+QrSdXxVhDmkgSpMILMmoAl8JJ3TKovWuveeA12DzwosJT+FlUNIwU7uMQuN3drQLWxD5Uw5Yp+CQs9au5NHCz6QMjN4mtMmyibo7xUnPgFcytLpqGanYSEJBZqZMogkRtKIC5Im46iFVwFTrcwD5sp0Mlt2lYFNAqVcXtdJbfmgTMAZEiRQKsPJh/Q4ijbPvR67N5WVDvz21NevVTlBEna6wytYQRhI4RzFQSmXDOYhXz/hcmBwXov/Mj5ILbLKB1uKqCiGZ7CJP064d9b4Oq8nvR7/7ZvYVazILGctYA7/AeF9JH2VZejbSZxYq1GaV6J8RDAK/X3cf//uw4df+v2Tfu+YdXetMyCU7PJLMO2s/NrWuJBKv6Zw0lIY7hWiJJJcYypg+UKBblpGbuHsEofnvW/qkvp5r8gHvYWdcP+dEf3VO/39/UT92Zefbj55q2C8heztSyh9lLlomvL/QKcVxVRqjxwWkaUfY/WH1CqProhamjsJvZczfCFTTbjvXgp3aAIS17VHmiM15n7awF929/Xoo0QoLNOwsxFaJ0MBKXSlU90tMx+5FjXXV/CwWUNFGlIoQnBpt6ttJnVhfUjfcqM/pYrPfCxynKO2rkQTGmdhk7QN+bTbXdmKjvhUZdihynSkc8/sXZHNqyyC3UR9MNC2ysV1ZQ5hM06AUbl+HCTn23S1Cf7fMfQ+QTPV7rik1YjKTG3MvAoRpc/RytCIc0MqK2IORnWUPCchAU5sHd1xp9d5nsPzpSP0vnPvRakysk2O4jDHaJRn+BYtkcsg67G9u9qRnSqNXlSeRZv5NajZu9kQePTXc17gXOoq1njnztyZN2/EBcpQEfo7cyRGyrA2y9fEv7sZdxGy3NXOoR3XT8mWYm96suDAmqmaVSQnGreriJihadYFFvlqhaxCgSY0zSe2M51PLxShD5ZQRFLdqjWdK7PYuUaWDAevJqPKOUtc9/sVOFOhqCYR7liMlmbdbREcPQa3LVJGW6sMjcfWBV+GN8Atxp1VStM62c48YXAh2s21B/f6kW5+ouWt4ZGAy9B1Wtb7SszeuiGPW5BOcTDP6WOcADMEy6zXE+nxG+nNhj/Xu1N6O05gLklxBfDbJoECZY4U+eYBV5DCoM7K0Q17wuK6ipPxKSEzsdQap1mGLvxQdtyiwqvL0Q0kMGm2z9LmrENywRukXEAKcYll7cjh8dsatDSzKrIt1Db59w9WuhF6
+sidebar_class_name: "post api-method"
+info_path: api/linkedin-enrichment-service-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Discover new prospects"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/discover-prospects"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Search Google for prospects matching keywords and parse results with OpenAI.
+Maximum 100 results per search (Google API limitation).
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["keywords"],"properties":{"keywords":{"type":"string","description":"Google search query","example":"software engineer San Francisco site:linkedin.com/in"},"maxResults":{"type":"integer","minimum":1,"maximum":100,"default":10,"description":"Number of results to retrieve (max 100)"},"batchId":{"type":"string","description":"Optional custom batch ID"}}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Discovery completed","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean"},"batchId":{"type":"string","example":"batch_1765993772701"},"prospectsCreated":{"type":"integer","example":8},"prospectsFailed":{"type":"integer","example":2},"prospectIds":{"type":"array","items":{"type":"string"},"example":["DOeIE0UiOr7d0hdC0wob","oDrrZ0AJ6biW7aHTHsoi"]}}}}}},"400":{"description":"Bad request","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Validation error"},"message":{"type":"string"}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Internal server error"},"message":{"type":"string"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

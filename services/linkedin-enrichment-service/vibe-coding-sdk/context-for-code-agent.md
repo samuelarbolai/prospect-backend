@@ -1,5 +1,9 @@
 # LinkedIn Enrichment Service - Context for Code Agent
 
+**Last Verified:** December 30, 2024
+**Service Version:** 1.0.0
+**Status:** Production Ready
+
 ## Project Overview
 
 The **LinkedIn Enrichment Service** is an Express.js microservice that enriches prospect data with LinkedIn profiles using Google Custom Search and OpenAI. It provides REST API endpoints for:
@@ -11,13 +15,28 @@ The **LinkedIn Enrichment Service** is an Express.js microservice that enriches 
 5. **Keyword testing** - Preview generated search queries
 6. **Prospect retrieval** - Get prospects with filtering (all, by ID, by batch, by status)
 7. **Batch retrieval** - Get batches with filtering (all, by ID, by status)
+8. **Web interface** - Browser-based UI for testing all endpoints (`interface.html`)
 
 **Technology Stack:**
-- **Runtime:** Node.js 22+ with TypeScript (ES Modules)
+- **Runtime:** Node.js 18+ with TypeScript (ES Modules)
 - **Framework:** Express.js 4.x
 - **Database:** Google Cloud Firestore
 - **APIs:** OpenAI GPT-4o-mini, Google Custom Search API
 - **Authentication:** Firebase Admin SDK
+
+## Quick Links
+
+| Document | Purpose |
+|----------|---------|
+| [README.md](../README.md) | Complete API documentation and usage guide |
+| [QUICKSTART.md](../QUICKSTART.md) | Quick start guide for new developers |
+| [SERVICE_OVERVIEW.md](../SERVICE_OVERVIEW.md) | High-level service architecture overview |
+| [examples.md](../examples.md) | API usage examples and sample requests |
+| [GET_ENDPOINTS_TEST_RESULTS.md](../GET_ENDPOINTS_TEST_RESULTS.md) | Test results for GET endpoints |
+| [data_model_schema.md](data_model_schema.md) | Firestore collections and document schemas |
+| [current-plan.md](current-plan.md) | Project roadmap and future enhancements |
+| [deployment-commands.md](deployment-commands.md) | Deployment history and working commands |
+| [interface.html](../interface.html) | Web-based testing interface |
 
 ## Project Architecture (Flow)
 
@@ -122,6 +141,7 @@ src/
 **Purpose:** HTTP request handling and validation
 
 **Endpoints:**
+- `GET /` - Service metadata and endpoint listing
 - `GET /api/health` - Health check
 - `POST /api/enrich` - Enrich single prospect by ID
 - `POST /api/enrich/batch` - Enrich multiple prospects
@@ -196,14 +216,21 @@ src/
 **Purpose:** Application entry point
 - Validates environment variables
 - Initializes services (Firestore, Enrichment, Batch, SnippetParser)
-- Creates Express app with CORS
+- Creates Express app with CORS and JSON body parser (10mb limit)
+- Serves static files from root directory (for interface.html)
+- Adds request logging middleware
 - Mounts routes at `/api`
+- Provides root endpoint (`GET /`) with service metadata
+- Global error handler and 404 handler
 - Starts server on PORT (default: 4200)
 
 **Recent Changes:**
 - Added SnippetParserService initialization
 - Added BatchService initialization
-- Added discover-prospects endpoint to startup logs
+- Added static file serving middleware (line 84)
+- Added request logging middleware (lines 86-94)
+- Added root endpoint with service metadata (lines 106-121)
+- Added 404 and global error handlers (lines 124-139)
 
 ### src/routes/enrichment.routes.ts
 **Purpose:** All API route handlers
@@ -281,15 +308,94 @@ src/
 **Recent Changes:**
 - Stable, no recent changes
 
+## Additional Files
+
+### interface.html
+**Purpose:** Browser-based web interface for testing all API endpoints
+**Location:** Root directory
+**Features:**
+- Interactive UI for all 12 endpoints
+- Pre-filled example requests
+- Response visualization with JSON formatting
+- No authentication required (development mode)
+- Served via static file middleware in index.ts
+
+**Access:** Navigate to `http://localhost:4200/` when service is running
+
+**Recent Changes:**
+- Created for easier API testing during development
+- Provides visual feedback for all endpoint types
+
+### test-service.sh
+**Purpose:** Comprehensive bash script to test all endpoints
+**Location:** Root directory
+**Features:**
+- Tests all 11 API endpoints sequentially
+- Color-coded output (green for success, red for errors)
+- JSON response formatting with jq
+- Creates test data and cleans up after
+
+**Usage:**
+```bash
+chmod +x test-service.sh
+./test-service.sh
+```
+
+### test-quick.sh
+**Purpose:** Quick health check script
+**Location:** Root directory
+**Features:**
+- Fast service health verification
+- Tests root endpoint and health check
+- Minimal output for CI/CD
+
+**Usage:**
+```bash
+chmod +x test-quick.sh
+./test-quick.sh
+```
+
+### GET_ENDPOINTS_TEST_RESULTS.md
+**Purpose:** Documentation of GET endpoint test results
+**Location:** Root directory
+**Contains:**
+- Test results for all 5 GET endpoints
+- Sample responses
+- Query parameter examples
+- Verification of filtering functionality
+
+### .dockerignore
+**Purpose:** Excludes files from Docker image
+**Excludes:**
+- node_modules
+- dist
+- .env
+- Test files and scripts
+- Documentation
+
+### Dockerfile
+**Purpose:** Container definition for deployment
+**Features:**
+- Multi-stage build (not currently used, single stage)
+- Node.js 20 alpine base
+- Production dependencies only
+- Runs on port 4200
+- Sets NODE_ENV=production
+
+**Build:**
+```bash
+docker build -t linkedin-enrichment-service .
+```
+
 ## Building and Running
 
 ### Prerequisites
-- Node.js 22+
+- Node.js 18+ (recommended: 20 or 22)
 - npm or yarn
 - Google Cloud Firestore database
 - OpenAI API key
 - Google Custom Search API key and CSE ID
-- Firebase service account credentials
+- Firebase service account credentials (or Application Default Credentials)
 
 ### Environment Variables
 
@@ -329,7 +435,31 @@ npm start
 
 ### Testing
 
+**Option 1: Web Interface (Recommended)**
 ```bash
+# Start the service
+npm run dev
+
+# Open browser and navigate to:
+http://localhost:4200/
+
+# Use the interactive UI to test all endpoints
+```
+
+**Option 2: Test Scripts**
+```bash
+# Comprehensive test suite (all endpoints)
+./test-service.sh
+
+# Quick health check
+./test-quick.sh
+```
+
+**Option 3: Manual curl Commands**
+```bash
+# Service metadata
+curl http://localhost:4200/
+
 # Health check
 curl http://localhost:4200/api/health
 
@@ -359,36 +489,77 @@ curl http://localhost:4200/api/batches?limit=10
 curl http://localhost:4200/api/batches/batch_123/prospects
 ```
 
+**Test Results Documentation:**
+See [GET_ENDPOINTS_TEST_RESULTS.md](../GET_ENDPOINTS_TEST_RESULTS.md) for detailed test results.
+
 ## Development Conventions
 
 ### Language
 - **TypeScript 5.6+** with strict mode
 - **ES Modules** (type: "module" in package.json)
 - **Async/await** for asynchronous operations
+- **Compiler Options:**
+  - Target: ES2022
+  - Module: ES2022
+  - Module Resolution: bundler
+  - Strict mode enabled
+  - Source maps and declarations enabled
+
+### Linting
+- No explicit linter configured (ESLint/Prettier not in package.json)
+- TypeScript compiler handles basic linting via strict mode
+- Consider adding ESLint + Prettier for production
+
+### Formatting
+- No automated formatter currently configured
+- Manual formatting conventions:
+  - 2 spaces for indentation
+  - Single quotes preferred
+  - Semicolons required
 
 ### Code Style
 - Use explicit types, avoid `any`
 - Prefer interfaces over types for objects
 - Use optional chaining (`?.`) for nested properties
 - Use nullish coalescing (`??`) for defaults
+- Async/await over promises
+- Destructuring for cleaner code
 
 ### Logging
 - Use `console.log()` for info
 - Use `console.error()` for errors
 - Prefix logs with endpoint/function name: `[POST /enrich]`
 - Log key operations: start, completion, errors
+- Request/response logging middleware active (duration tracking)
+- **TODO:** Consider migrating to structured logging (winston/pino)
 
 ### Error Handling
 - Try-catch blocks in all route handlers
 - Return structured error responses: `{ success: false, error, message }`
 - Continue on non-critical errors (e.g., Firestore save failures)
+- Global error handler catches unhandled errors
+- 404 handler for unknown routes
+
+### Testing
+- **Current:** Manual testing only
+- Test scripts: `test-service.sh`, `test-quick.sh`
+- No unit tests or integration tests yet
+- `npm test` returns placeholder message
+- **TODO:** Add Vitest or Jest test suite
 
 ### API Documentation
 - JSDoc comments on all public functions
 - Inline comments in route handlers explaining request/response format
-- See README.md for full API documentation
+- Zod schemas for request validation
+- See [README.md](../README.md) for full API documentation
+- See [examples.md](../examples.md) for usage examples
 
 ## CI/CD
+
+### GitHub Actions
+- **Status:** No automated CI/CD currently configured for this service
+- Other services in the monorepo use GitHub Actions (see `backend/.github/workflows/deploy-lambdas.yml`)
+- **TODO:** Create GitHub Actions workflow for automated Cloud Run deployment
 
 ### Deployment
 
@@ -397,6 +568,8 @@ curl http://localhost:4200/api/batches/batch_123/prospects
 **Deployment Options:**
 
 1. **Cloud Run (Recommended)**
+
+**Using gcloud CLI:**
 ```bash
 # Build container
 gcloud builds submit --tag gcr.io/<PROJECT_ID>/linkedin-enrichment-service
@@ -410,15 +583,49 @@ gcloud run deploy linkedin-enrichment-service \
   --set-env-vars OPENAI_API_KEY=...,GOOGLE_API_KEY=...,GOOGLE_CSE_ID=...
 ```
 
-2. **Docker**
+**Using Dockerfile:**
 ```bash
-docker build -t linkedin-enrichment-service .
-docker run -p 4200:4200 --env-file .env linkedin-enrichment-service
+# Build image
+docker build -t gcr.io/<PROJECT_ID>/linkedin-enrichment-service .
+
+# Push to GCR
+docker push gcr.io/<PROJECT_ID>/linkedin-enrichment-service
+
+# Deploy to Cloud Run
+gcloud run deploy linkedin-enrichment-service \
+  --image gcr.io/<PROJECT_ID>/linkedin-enrichment-service \
+  --platform managed \
+  --region us-central1
 ```
 
-### GitHub Actions
-- No automated CI/CD currently configured
-- See `backend/.github/workflows/` for Lambda deployment workflows (separate services)
+2. **Docker (Local/Any Host)**
+```bash
+# Build image
+docker build -t linkedin-enrichment-service .
+
+# Run container
+docker run -p 4200:4200 --env-file .env linkedin-enrichment-service
+
+# Or with environment variables
+docker run -p 4200:4200 \
+  -e OPENAI_API_KEY=... \
+  -e GOOGLE_API_KEY=... \
+  -e GOOGLE_CSE_ID=... \
+  linkedin-enrichment-service
+```
+
+3. **Direct Node.js Deployment**
+```bash
+# Build TypeScript
+npm run build
+
+# Run production server
+npm start
+```
+
+### Deployment Commands That Have Worked
+
+See [deployment-commands.md](deployment-commands.md) for detailed deployment history and commands that have been tested successfully.
 
 ## Next Steps
 
@@ -444,11 +651,93 @@ docker run -p 4200:4200 --env-file .env linkedin-enrichment-service
 - [ ] Set up GitHub Actions for automated deployment
 - [ ] Add API authentication (JWT, API keys)
 
-### Known Issues
-- ~~One prospect failed in testing due to undefined `organization` field (Firestore validation)~~ ✅ FIXED
-  - Solution implemented: Filter undefined values before saving to Firestore
-- Google Custom Search API has a hard limit of 100 results per query
-  - This is a Google API constraint, not a service limitation
-  - Users needing more prospects should run multiple searches with different keywords
-- No automated tests yet
-- No rate limiting on endpoints
+### Known Issues & Limitations
+
+1. **Undefined Field Validation** - ✅ FIXED
+   - **Issue:** Firestore rejects `undefined` values in documents
+   - **Fix:** Implemented filtering of undefined values before saving to Firestore
+   - **Location:** [batch.service.ts](../src/services/batch.service.ts) - filters undefined fields when creating prospects
+
+2. **Google Custom Search API Limit**
+   - **Issue:** Hard limit of 100 results per query
+   - **Impact:** Cannot discover more than 100 prospects per search
+   - **Workaround:** Run multiple searches with different keywords
+   - **Status:** Google API constraint, not a service limitation
+
+3. **No Automated Tests**
+   - **Issue:** No unit or integration tests
+   - **Impact:** Manual testing required for all changes
+   - **Priority:** Medium
+   - **TODO:** Add Vitest/Jest test suite
+
+4. **No Rate Limiting**
+   - **Issue:** No rate limiting on API endpoints
+   - **Impact:** Potential abuse or cost overruns
+   - **Priority:** High for production deployment
+   - **TODO:** Add express-rate-limit middleware
+
+5. **No Authentication**
+   - **Issue:** All endpoints are publicly accessible
+   - **Impact:** Security risk in production
+   - **Priority:** High for production deployment
+   - **TODO:** Add API key authentication or JWT
+
+6. **Root Endpoint Missing All Endpoints**
+   - **Issue:** `GET /` only lists 5 endpoints, missing GET endpoints
+   - **Location:** [src/index.ts:111-118](../src/index.ts#L111-L118)
+   - **Priority:** Low
+   - **TODO:** Update root endpoint to list all 12 endpoints
+
+## Version History & Changelog
+
+### Version 1.0.0 (Current)
+**Status:** Production Ready
+**Date:** December 2024
+
+**Features:**
+- ✅ 12 API endpoints (6 POST, 6 GET)
+- ✅ Single and batch prospect enrichment
+- ✅ Prospect discovery from Google search
+- ✅ Web interface for testing
+- ✅ Firestore integration
+- ✅ OpenAI and Google Custom Search integration
+- ✅ Comprehensive error handling
+- ✅ Request logging middleware
+- ✅ Docker support
+
+**Recent Changes (December 17, 2024):**
+- Added 5 GET endpoints for prospects and batches retrieval
+- Added web interface (interface.html)
+- Added static file serving middleware
+- Added request logging with duration tracking
+- Added root endpoint with service metadata
+- Added global error handler and 404 handler
+- Created test scripts (test-service.sh, test-quick.sh)
+- Fixed undefined field validation in Firestore saves
+
+**Known Git Commits:**
+- `0731a81` - Update
+- `d48a3b3` - Update
+- `bfaf31a` - Fix TypeScript build: add @types/uuid dependency
+- `3671bb3` - Add pricing system and LinkedIn enrichment billing
+- `574956e` - Added deployment files
+
+### Upcoming Features (See current-plan.md)
+- [ ] Rate limiting
+- [ ] API authentication
+- [ ] Automated tests
+- [ ] Structured logging
+- [ ] Metrics/monitoring
+- [ ] GitHub Actions CI/CD
+
+## Related Documentation
+
+For more context about this service within the larger backend monorepo, see:
+- [backend/CLAUDE.md](../../../../CLAUDE.md) - Monorepo-wide guidance
+- [backend/docs/microservices-architecture.md](../../../../docs/microservices-architecture.md) - Architecture overview
+- [backend/logs.md](../../../../logs.md) - Session-to-session context and deployment history
+
+---
+
+**Document Last Updated:** December 30, 2024 by Claude Code
+**Next Review Date:** January 2025 or after major feature releases

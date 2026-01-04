@@ -1,0 +1,71 @@
+---
+id: get-prospect
+title: "Get prospect by ID"
+description: "Retrieve a single prospect by Firestore document ID"
+sidebar_label: "Get prospect by ID"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNVt9v4zYM/lcE3ssd4Cbd0L34reh6RYDbrWi3p7YoFImx1cqSKlG5ZoH/94G28+virtg9DMtLbJPiR1LkR66BZJWgvIPr6FNARQkeCtCYVDSBjHdQwg1SNLhEIUUyrrIowqAs5ivx2URM5CMK7VVu0JGY/QoF+IBRsoWZhhIqpA0CFBBklA0SRoZeg5MNQglGQwGGEYOkGgqI+JJNRA0lxYzfu7Wx18MlVWMjoVwDrQJbSxSNq6BtH9hQCt4lTCz/+fSU/94wtvDZsR/KO0JHrClDsEZ1sUyfEquvj+H8/GmILXLkZHqwlJXClPYU595blA7aTrXPyIiZN9zb5ngRfbPL/RGu0SOpKIZMjwh8rKQzf8keb0SBDNnxo9art48lr4y07+fJGveM2rj3NUM0jYyrcTSSlNOxqAB0ueEy1yYpv0QuKv4Yjaq7x4U0FjU8tPzbSJqhAN654ndBAzrdf3nJmLEvryZYpEPsYpuGx7eM7uvkoCWhfpQ0Br7wsWEJsNIJmQahC20uSdWPb9SHivgvTRbwA25sy2lb2NAOmT87PTvuzhtMPkeFwvn/sEMLwFfJ1wTlQtqEXBcx+jh61RtN+Lp1sS2gwZRkNdY3Q7i/jJHRzBFGJ61IGJcYRY/6v4143N33o+80qPbDfOjmAtVQwlQGM92QY5qujW6Z4Tvr/cTI0UIJNVEop1MmIFv7ROUZc/v33PmFxULjEq0PHXf2lqAt9g2lcjpd+RxPWGoUTmJ2ExnCGBfrrPhlE/DHC+uzFjfZfQIeN8YtfBf0UORfuo6dOXG5pRVx26OI8+sZFMCB9dZ/mpxOjmO4fA0RU5o8JdEYFf3go1j4KHquMq7ajWUtSYpvhmqxhQ7RL4zFJDLPcHHlPQ/yi5zIN+IWZVS1kE6L3wO685nApbS5K6/Jvbt3Hz6IzygpR0z37kTc9msA63d0skPeESfr7cbWQLurfm4N6KmDZcUL7xamylHOLYpnXH3zUYsK3bBCsMpXL2SmGh0NdS826wFLd1uIcYTV5tjQNLKfscOecX49E7c5BB+55g4roDJU5/lE+aYvBh+r6YZwT3bBbYqk52OFLuEewG+zPzqSCz5RI92e5ArpYHnqVpeDq17vuvwHF6+h1QhfaRqsNN2q0UW5HhrsDmQwsNs/EhRQGs2bH7cRK6zXc5nwz2jblj+/ZOSRe/dQwFJGw9fU9aE2iZ/1wBf/EMvHm+G2PonDxW3U3eGjdCtuDmkzv0EBz7jqF8WWp2WNUmPsHOkF50phoL0jRzTJ7bklnatLvqe/Aatn2J8=
+sidebar_class_name: "get api-method"
+info_path: api/linkedin-enrichment-service-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get prospect by ID"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/prospects/{id}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve a single prospect by Firestore document ID
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"id","in":"path","required":true,"description":"Prospect ID","schema":{"type":"string"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Prospect found","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean"},"prospect":{"type":"object","description":"Prospect document from Firestore","properties":{"id":{"type":"string"},"name":{"type":"string"},"organization":{"type":"string"},"title":{"type":"string"},"location":{"type":"string"},"social":{"type":"object","properties":{"linkedin":{"type":"object","properties":{"primary":{"type":"string"},"status":{"type":"string","enum":["discovered","enriched","failed"]}}}}},"enrichment":{"type":"object","properties":{"status":{"type":"string","enum":["pending","queued","completed","failed"]},"linkedin_status":{"type":"string"},"linkedin_updated_at":{"type":"string","format":"date-time"}}},"batch_id":{"type":"string"},"created_at":{"type":"string","format":"date-time"},"updated_at":{"type":"string","format":"date-time"}},"title":"Prospect"}}}}}},"404":{"description":"Resource not found","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Not found"},"message":{"type":"string"}}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"success":{"type":"boolean","example":false},"error":{"type":"string","example":"Internal server error"},"message":{"type":"string"}}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

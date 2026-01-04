@@ -1,0 +1,721 @@
+openapi: 3.0.0
+info:
+  title: LinkedIn Enrichment Service API
+  version: 1.0.0
+  description: |
+    Express.js microservice for enriching prospect data with LinkedIn profiles using Google Custom Search and OpenAI evaluation.
+
+    ## Features
+    - Single and batch prospect enrichment
+    - Prospect discovery from Google search
+    - Configurable keyword generation
+    - No authentication required
+    - Firestore integration
+  contact:
+    name: API Support
+    url: https://github.com/your-org/linkedin-enrichment-service
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:4200
+    description: Local development server
+  - url: https://your-service.run.app
+    description: Production server (Cloud Run)
+
+tags:
+  - name: Health
+    description: Health check and service metadata
+  - name: Enrichment
+    description: LinkedIn profile enrichment endpoints
+  - name: Discovery
+    description: Prospect discovery from search
+  - name: Prospects
+    description: Prospect data retrieval
+  - name: Batches
+    description: Batch operations and retrieval
+
+paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: Get service metadata
+      description: Returns service information and available endpoints
+      operationId: getServiceInfo
+      responses:
+        '200':
+          description: Service metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: LinkedIn Enrichment Service
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  status:
+                    type: string
+                    example: running
+                  endpoints:
+                    type: object
+                  documentation:
+                    type: string
+                    example: See README.md for detailed API documentation
+
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the service is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                    example: linkedin-enrichment-service
+
+  /api/enrich:
+    post:
+      tags:
+        - Enrichment
+      summary: Enrich single prospect
+      description: Find and validate LinkedIn profile for a single prospect stored in Firestore
+      operationId: enrichProspect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prospectId
+              properties:
+                prospectId:
+                  type: string
+                  description: Firestore document ID of the prospect
+                  example: abc123
+                keywordConfig:
+                  $ref: '#/components/schemas/KeywordConfig'
+                customKeywords:
+                  type: string
+                  description: Custom search query (overrides keyword generation)
+                  example: "John Doe CEO Acme Corp LinkedIn"
+      responses:
+        '200':
+          description: Enrichment successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  result:
+                    $ref: '#/components/schemas/EnrichmentResult'
+                  enrichmentId:
+                    type: string
+                    example: xyz789
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/enrich/batch:
+    post:
+      tags:
+        - Enrichment
+      summary: Enrich multiple prospects
+      description: Enrich multiple prospects in a single request
+      operationId: enrichBatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prospectIds
+              properties:
+                prospectIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of Firestore prospect IDs
+                  example: ["abc123", "def456", "ghi789"]
+                keywordConfig:
+                  $ref: '#/components/schemas/KeywordConfig'
+      responses:
+        '200':
+          description: Batch enrichment completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EnrichmentResult'
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      successful:
+                        type: integer
+                      failed:
+                        type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/enrich-direct:
+    post:
+      tags:
+        - Enrichment
+      summary: Enrich prospect data directly
+      description: Enrich prospect data provided in the request body (no Firestore lookup)
+      operationId: enrichDirect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prospectData
+              properties:
+                prospectData:
+                  $ref: '#/components/schemas/ProspectData'
+                keywordConfig:
+                  $ref: '#/components/schemas/KeywordConfig'
+                customKeywords:
+                  type: string
+      responses:
+        '200':
+          description: Enrichment successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    $ref: '#/components/schemas/EnrichmentResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/test-keywords:
+    post:
+      tags:
+        - Enrichment
+      summary: Test keyword generation
+      description: Preview generated search keywords without running enrichment
+      operationId: testKeywords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prospectId:
+                  type: string
+                prospectData:
+                  $ref: '#/components/schemas/ProspectData'
+                keywordConfig:
+                  $ref: '#/components/schemas/KeywordConfig'
+      responses:
+        '200':
+          description: Keywords generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  keywords:
+                    type: string
+                    example: '"John Doe" Acme Corp site:linkedin.com/in'
+                  prospect:
+                    $ref: '#/components/schemas/ProspectData'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/discover-prospects:
+    post:
+      tags:
+        - Discovery
+      summary: Discover new prospects
+      description: |
+        Search Google for prospects matching keywords and parse results with OpenAI.
+        Maximum 100 results per search (Google API limitation).
+      operationId: discoverProspects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - keywords
+              properties:
+                keywords:
+                  type: string
+                  description: Google search query
+                  example: "software engineer San Francisco site:linkedin.com/in"
+                maxResults:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 10
+                  description: Number of results to retrieve (max 100)
+                batchId:
+                  type: string
+                  description: Optional custom batch ID
+      responses:
+        '200':
+          description: Discovery completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  batchId:
+                    type: string
+                    example: batch_1765993772701
+                  prospectsCreated:
+                    type: integer
+                    example: 8
+                  prospectsFailed:
+                    type: integer
+                    example: 2
+                  prospectIds:
+                    type: array
+                    items:
+                      type: string
+                    example: ["DOeIE0UiOr7d0hdC0wob", "oDrrZ0AJ6biW7aHTHsoi"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/prospects:
+    get:
+      tags:
+        - Prospects
+      summary: List prospects
+      description: Retrieve prospects with optional filtering
+      operationId: listProspects
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of prospects to return
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: status
+          in: query
+          description: Filter by enrichment status
+          schema:
+            type: string
+            enum: [pending, queued, completed, failed]
+        - name: batch_id
+          in: query
+          description: Filter by batch ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of prospects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  prospects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Prospect'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/prospects/{id}:
+    get:
+      tags:
+        - Prospects
+      summary: Get prospect by ID
+      description: Retrieve a single prospect by Firestore document ID
+      operationId: getProspect
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Prospect ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prospect found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  prospect:
+                    $ref: '#/components/schemas/Prospect'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/batches:
+    get:
+      tags:
+        - Batches
+      summary: List batches
+      description: Retrieve batches with optional filtering
+      operationId: listBatches
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of batches to return
+          schema:
+            type: integer
+            default: 100
+        - name: status
+          in: query
+          description: Filter by batch status
+          schema:
+            type: string
+            enum: [in_progress, completed, failed]
+      responses:
+        '200':
+          description: List of batches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  batches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Batch'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/batches/{id}:
+    get:
+      tags:
+        - Batches
+      summary: Get batch by ID
+      description: Retrieve a single batch by ID
+      operationId: getBatch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Batch ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  batch:
+                    $ref: '#/components/schemas/Batch'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/batches/{id}/prospects:
+    get:
+      tags:
+        - Batches
+      summary: Get prospects in batch
+      description: Retrieve all prospects for a specific batch
+      operationId: getBatchProspects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Batch ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prospects found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  batchId:
+                    type: string
+                  count:
+                    type: integer
+                  prospects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Prospect'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    KeywordConfig:
+      type: object
+      description: Configuration for keyword generation
+      properties:
+        includeName:
+          type: boolean
+          default: true
+          description: Include prospect name in search
+        includeOrganization:
+          type: boolean
+          default: true
+          description: Include organization in search
+        includeTitle:
+          type: boolean
+          default: false
+          description: Include job title in search
+        includeLocation:
+          type: boolean
+          default: false
+          description: Include location in search
+        customTemplate:
+          type: string
+          description: Custom template string (e.g., "{name} at {organization}")
+        additionalKeywords:
+          type: array
+          items:
+            type: string
+          description: Additional keywords to append
+          example: ["LinkedIn", "profile"]
+
+    ProspectData:
+      type: object
+      description: Prospect information
+      properties:
+        name:
+          type: string
+          example: John Doe
+        organization:
+          type: string
+          example: Acme Corporation
+        title:
+          type: string
+          example: Chief Technology Officer
+        location:
+          type: string
+          example: San Francisco, CA
+
+    EnrichmentResult:
+      type: object
+      description: Result of LinkedIn enrichment
+      properties:
+        prospectId:
+          type: string
+          example: abc123
+        linkedinUrl:
+          type: string
+          nullable: true
+          example: https://linkedin.com/in/johndoe
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FALLBACK_LINKEDIN_RESULT
+            - FALLBACK_FIRST_LINK
+            - MODEL_NOT_AVAILABLE
+            - MODEL_AMBIGUOUS
+            - NO_GOOGLE_RESULTS
+            - MISSING_KEYWORDS
+            - GOOGLE_ERROR
+            - OPENAI_ERROR
+            - NOT_FOUND
+          example: SUCCESS
+        keywords:
+          type: string
+          example: '"John Doe" Acme Corp site:linkedin.com/in'
+        notes:
+          type: string
+          nullable: true
+
+    Prospect:
+      type: object
+      description: Prospect document from Firestore
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        organization:
+          type: string
+        title:
+          type: string
+        location:
+          type: string
+        social:
+          type: object
+          properties:
+            linkedin:
+              type: object
+              properties:
+                primary:
+                  type: string
+                status:
+                  type: string
+                  enum: [discovered, enriched, failed]
+        enrichment:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [pending, queued, completed, failed]
+            linkedin_status:
+              type: string
+            linkedin_updated_at:
+              type: string
+              format: date-time
+        batch_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Batch:
+      type: object
+      description: Batch discovery record
+      properties:
+        id:
+          type: string
+        batch_id:
+          type: string
+        keywords:
+          type: string
+        max_results:
+          type: integer
+        prospects_created:
+          type: integer
+        prospects_failed:
+          type: integer
+        total_attempted:
+          type: integer
+        prospect_ids:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [in_progress, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Validation error
+              message:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Not found
+              message:
+                type: string
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Internal server error
+              message:
+                type: string
