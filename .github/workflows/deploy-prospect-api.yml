@@ -15,33 +15,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install prospect-api dependencies
-        run: npm install
+      - name: Install and build prospect-api
+        run: |
+          npm install
+          npm run build
         working-directory: services/prospect-api
 
-      - name: Build prospect API
-        run: npm run build
-        working-directory: services/prospect-api
-
-      - name: Install prospect-lists-api dependencies
-        run: npm install
+      - name: Install and build prospect-lists-api
+        run: |
+          npm install
+          npm run build
         working-directory: services/prospect-lists-api
-
-      - name: Build lists API
-        run: npm run build
-        working-directory: services/prospect-lists-api
-
-      - name: Install linkedin-enrichment-service dependencies
-        run: npm install
-        working-directory: services/linkedin-enrichment-service
-
-      - name: Install linkedin-enrichment-service docs dependencies
-        run: npm install
-        working-directory: services/linkedin-enrichment-service/docs-site
-
-      - name: Build linkedin-enrichment-service
-        run: npm run build
-        working-directory: services/linkedin-enrichment-service
 
       - name: Backend smoke tests (deployed endpoints)
         run: node scripts/test-backend.mjs
