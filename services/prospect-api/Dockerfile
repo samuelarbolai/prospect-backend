@@ -10,8 +10,10 @@ RUN npm ci --no-cache
 # Copy all source files from the service directory
 COPY services/prospect-api/ .
 
-# Build the application
-# Assuming your package.json has a 'build' script
+# Install docs dependencies
+RUN cd docs-site && npm ci && cd ..
+
+# Build the application (includes docs)
 RUN npm run build
 
 # Prune dev dependencies
